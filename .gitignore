@@ -1,0 +1,34 @@
+
+# Gradle
+.gradle/
+build/
+**/build/
+
+# Configurações locais do Android SDK
+local.properties
+
+# Android Studio - arquivos locais e temporários
+.idea/caches/
+.idea/libraries/
+.idea/workspace.xml
+.idea/navEditor.xml
+.idea/assetWizardSettings.xml
+*.iml
+
+# Arquivos gerados pelo Android NDK
+.externalNativeBuild/
+.cxx/
+
+# Logs e arquivos temporários
+*.log
+captures/
+
+# Credenciais e arquivos de assinatura
+keystore.properties
+*.jks
+*.keystore
+
+# Segredos locais e variáveis de ambiente
+.env
+.env.*
+!.env.example
