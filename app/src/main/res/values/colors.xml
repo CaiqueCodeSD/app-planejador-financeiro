@@ -2,4 +2,33 @@
 <resources>
     <color name="black">#FF000000</color>
     <color name="white">#FFFFFFFF</color>
+    <color name="background_warm">#F7F8F4</color>
+    <color name="primary_green">#214C35</color>
+    <color name="primary_green_light">#52705A</color>
+    <color name="primary_green_soft">#E3EDE2</color>
+    <color name="primary_green_pale">#E8EDE5</color>
+    <color name="text_primary">#243D2B</color>
+    <color name="text_secondary">#7C867D</color>
+    <color name="income_green">#477D52</color>
+    <color name="expense_terracotta">#B66A52</color>
+    <color name="expense_background">#F5E8E1</color>
+    <color name="divider_color">#E6E9E2</color>
+    <color name="text_heading">#1D3527</color>
+    <color name="text_summary_label">#69756B</color>
+    <color name="period_text_color">#294A34</color>
+    <color name="card_subtext_color">#D3E3D4</color>
+    <color name="card_accent_line">#A8C9A7</color>
+    <color name="item_title_color">#283A2D</color>
+    <color name="item_subtitle_color">#858D85</color>
+    <color name="recent_text_color">#718073</color>
+    <color name="pf_background">#101411</color>
+    <color name="pf_surface">#1A211C</color>
+    <color name="pf_glass">#CC222D25</color>
+    <color name="pf_border">#354238</color>
+    <color name="pf_green">#3F4940</color>
+    <color name="pf_lime">#B7F36B</color>
+    <color name="pf_text_primary">#F1F5EE</color>
+    <color name="pf_text_secondary">#A8B2A8</color>
+    <color name="pf_expense">#E6A08A</color>
+    <color name="pf_divider">#2A342C</color>
 </resources>
