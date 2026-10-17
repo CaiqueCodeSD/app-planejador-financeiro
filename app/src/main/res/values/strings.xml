@@ -1,3 +1,24 @@
 <resources>
-    <string name="app_name">PlanejadorFinanceiro</string>
+    <string name="app_name">Planejador Financeiro</string>
+    <string name="dashboard_brand">PLANEJADOR FINANCEIRO</string>
+    <string name="dashboard_title">Seu dinheiro,\nmais organizado.</string>
+    <string name="monthly_summary">RESUMO DO MÊS</string>
+    <string name="monthly_period">Outubro 2026  ▾</string>
+    <string name="monthly_balance">SALDO DO MÊS</string>
+    <string name="balance_description">Receitas menos despesas</string>
+    <string name="income_label">↑  RECEITAS</string>
+    <string name="income_description">Entradas do mês</string>
+    <string name="expense_label">↓  DESPESAS</string>
+    <string name="expense_description">Saídas do mês</string>
+    <string name="transactions_title">Movimentações</string>
+    <string name="transactions_recent">Recentes</string>
+    <string name="icon_plus">＋</string>
+    <string name="transaction_salary">Salário</string>
+    <string name="transaction_salary_detail">Receita · 05 out.</string>
+    <string name="icon_minus">−</string>
+    <string name="transaction_groceries">Supermercado</string>
+    <string name="transaction_groceries_detail">Alimentação · 08 out.</string>
+    <string name="transaction_internet">Internet</string>
+    <string name="transaction_internet_detail">Moradia · 10 out.</string>
+    <string name="new_transaction">+  Nova movimentação</string>
 </resources>
