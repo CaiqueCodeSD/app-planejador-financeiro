@@ -81,6 +81,17 @@ class ContaViewModel(
         }
     }
 
+    fun marcarComoPaga(id: Long) {
+        viewModelScope.launch {
+            try {
+                repository.marcarComoPaga(id)
+            } catch (e: Exception) {
+                // O tratamento de erro da operação será refinado
+                // junto com o feedback visual da interface.
+            }
+        }
+    }
+
     fun limparFeedback() {
         _uiState.value = CadastroContaUiState()
     }

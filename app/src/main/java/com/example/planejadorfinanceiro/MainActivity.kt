@@ -375,34 +375,7 @@ class MainActivity : AppCompatActivity() {
         val container = findViewById<LinearLayout>(R.id.containerListaContas)
         val listaVazia = listaVaziaView ?: return
 
-        container.removeAllViews()
-
-        if (contas.isEmpty()) {
-            listaVazia.visibility = View.VISIBLE
-            container.addView(listaVazia)
-            return
-        }
-
         listaVazia.visibility = View.GONE
-
-// Mantenha aqui o seu contas.forEachIndexed { ... }
-// que cria e adiciona os itens da lista.
-
-// Remove os itens anteriores, mas mantém a referência à view vazia.
-        container.removeAllViews()
-
-        if (contas.isEmpty()) {
-            listaVazia.visibility = View.VISIBLE
-            container.addView(listaVazia)
-            return
-        }
-
-        listaVazia.visibility = View.GONE
-
-        contas.forEachIndexed { index, conta ->
-            // Mantenha aqui o código existente que cria e preenche
-            // cada item da lista.
-        }
 
         // O container é reconstruído a cada atualização do Flow.
         container.removeAllViews()
@@ -466,6 +439,20 @@ class MainActivity : AppCompatActivity() {
 
             item.findViewById<TextView>(R.id.tvValorItemConta).text =
                 formatarMoeda(conta.valorCentavos)
+
+            val btnMarcarComoPaga =
+                item.findViewById<Button>(R.id.btnMarcarComoPaga)
+
+            btnMarcarComoPaga.visibility =
+                if (conta.situacao == SituacaoConta.PENDENTE) {
+                    View.VISIBLE
+                } else {
+                    View.GONE
+                }
+
+            btnMarcarComoPaga.setOnClickListener {
+                contaViewModel.marcarComoPaga(conta.id)
+            }
 
             container.addView(item)
 
