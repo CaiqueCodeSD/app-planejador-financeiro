@@ -1,9 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
 <resources xmlns:tools="http://schemas.android.com/tools">
-    <!-- Base application theme. -->
-    <style name="Base.Theme.PlanejadorFinanceiro" parent="Theme.Material3.DayNight.NoActionBar">
-        <!-- Customize your light theme here. -->
-        <!-- <item name="colorPrimary">@color/my_light_primary</item> -->
+
+    <style name="Base.Theme.PlanejadorFinanceiro"
+        parent="Theme.Material3.DayNight.NoActionBar">
+
+        <item name="colorPrimary">@color/pf_lime</item>
+        <item name="colorOnPrimary">@color/pf_background</item>
+
+        <item name="colorSecondary">@color/pf_lime</item>
+        <item name="colorOnSecondary">@color/pf_background</item>
+
+        <item name="colorControlActivated">@color/pf_lime</item>
     </style>
 
-    <style name="Theme.PlanejadorFinanceiro" parent="Base.Theme.PlanejadorFinanceiro" />
+    <style name="Theme.PlanejadorFinanceiro"
+        parent="Base.Theme.PlanejadorFinanceiro" />
+
 </resources>

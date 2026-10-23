@@ -31,4 +31,5 @@
     <color name="pf_text_secondary">#A8B2A8</color>
     <color name="pf_expense">#E6A08A</color>
     <color name="pf_divider">#2A342C</color>
+    <color name="pf_blue_light">#5FB1FD</color>
 </resources>

@@ -27,11 +27,15 @@ import java.util.Calendar
 import java.util.Date
 import java.util.Locale
 import kotlinx.coroutines.launch
+import androidx.activity.OnBackPressedCallback
+import androidx.appcompat.app.AlertDialog
+import android.content.res.ColorStateList
 
 class MainActivity : AppCompatActivity() {
 
     private lateinit var contaViewModel: ContaViewModel
 
+    private var contaEmEdicaoId: Long? = null
     private var listaVaziaView: TextView? = null
     private var vencimentoSelecionadoMillis: Long? = null
 
@@ -64,6 +68,7 @@ class MainActivity : AppCompatActivity() {
         configurarFormulario()
         observarEstadoCadastro()
         observarContas()
+        configurarBotaoVoltar()
     }
 
     // --------------------------------------------------
@@ -147,22 +152,116 @@ class MainActivity : AppCompatActivity() {
             if (telaId == R.id.registerBillScreen) View.VISIBLE else View.GONE
     }
 
-    private fun atualizarNavegacao(isHome: Boolean) {
-        val corAtiva = getColor(R.color.pf_lime)
-        val corInativa = getColor(R.color.pf_text_secondary)
 
-        findViewById<TextView>(R.id.navHomeLabel).setTextColor(
-            if (isHome) corAtiva else corInativa
+    private fun atualizarNavegacao(isHome: Boolean) {
+        val navHome = findViewById<View>(R.id.navHome)
+        val navBills = findViewById<View>(R.id.navBills)
+
+        val navHomeLabel = findViewById<TextView>(R.id.navHomeLabel)
+        val navBillsLabel = findViewById<TextView>(R.id.navBillsLabel)
+
+        navHome.setBackgroundResource(
+            if (isHome) {
+                R.drawable.pf_bg_nav_selected
+            } else {
+                android.R.color.transparent
+            }
         )
 
-        findViewById<TextView>(R.id.navBillsLabel).setTextColor(
-            if (isHome) corInativa else corAtiva
+        navBills.setBackgroundResource(
+            if (isHome) {
+                android.R.color.transparent
+            } else {
+                R.drawable.pf_bg_nav_selected
+            }
+        )
+
+        navHomeLabel.setTextColor(
+            getColor(
+                if (isHome) R.color.pf_background
+                else R.color.pf_text_secondary
+            )
+        )
+
+        navBillsLabel.setTextColor(
+            getColor(
+                if (isHome) R.color.pf_text_secondary
+                else R.color.pf_background
+            )
         )
     }
+
 
     // --------------------------------------------------
     // FORMULÁRIO DE CADASTRO
     // --------------------------------------------------
+
+
+    private fun configurarBotaoVoltar() {
+        onBackPressedDispatcher.addCallback(
+            this,
+            object : OnBackPressedCallback(true) {
+                override fun handleOnBackPressed() {
+                    val telaCadastro = findViewById<View>(
+                        R.id.registerBillScreen
+                    )
+
+                    val telaContas = findViewById<View>(
+                        R.id.billsScreen
+                    )
+
+                    when {
+                        telaCadastro.visibility == View.VISIBLE -> {
+                            limparFormulario()
+                            mostrarTela(R.id.billsScreen)
+                            atualizarNavegacao(isHome = false)
+                        }
+
+                        telaContas.visibility == View.VISIBLE -> {
+                            mostrarTela(R.id.dashboardScreen)
+                            atualizarNavegacao(isHome = true)
+                        }
+
+
+                        else -> {
+                            val dialog = AlertDialog.Builder(this@MainActivity)
+                                .setTitle("Sair do aplicativo?")
+                                .setMessage(
+                                    "Deseja sair do Planejador Financeiro?"
+                                )
+                                .setNegativeButton("Continuar usando", null)
+                                .setPositiveButton("Sair", null)
+                                .create()
+
+                            dialog.setOnShowListener {
+                                val verde = getColor(R.color.pf_lime)
+
+                                dialog.getButton(AlertDialog.BUTTON_POSITIVE)
+                                    .setTextColor(verde)
+
+                                dialog.getButton(AlertDialog.BUTTON_NEGATIVE)
+                                    .setTextColor(verde)
+
+                                dialog.getButton(AlertDialog.BUTTON_POSITIVE)
+                                    .setOnClickListener {
+                                        dialog.dismiss()
+                                        finish()
+                                    }
+
+                                dialog.getButton(AlertDialog.BUTTON_NEGATIVE)
+                                    .setOnClickListener {
+                                        dialog.dismiss()
+                                    }
+                            }
+
+                            dialog.show()
+                        }
+
+                    }
+                }
+            }
+        )
+    }
 
 
     private fun configurarFormulario() {
@@ -184,6 +283,7 @@ class MainActivity : AppCompatActivity() {
             atualizarNavegacao(isHome = false)
         }
     }
+
 
 
     private fun abrirCadastro() {
@@ -255,7 +355,8 @@ class MainActivity : AppCompatActivity() {
         contaViewModel.salvarConta(
             descricao = descricao,
             valorEmReais = valor,
-            vencimentoMillis = vencimento
+            vencimentoMillis = vencimento,
+            contaId = contaEmEdicaoId
         )
     }
 
@@ -277,19 +378,36 @@ class MainActivity : AppCompatActivity() {
                             View.GONE
                         }
 
+
                     findViewById<Button>(R.id.btnSalvarConta).apply {
                         isEnabled = !estado.salvando
-                        text = if (estado.salvando) {
-                            "Salvando..."
-                        } else {
-                            "Salvar conta"
+
+                        text = when {
+                            estado.salvando && contaEmEdicaoId != null ->
+                                "Atualizando..."
+
+                            estado.salvando ->
+                                "Salvando..."
+
+                            contaEmEdicaoId != null ->
+                                "Atualizar conta"
+
+                            else ->
+                                "Salvar conta"
                         }
                     }
 
+
                     if (estado.cadastroConcluido) {
+                        val mensagem = if (contaEmEdicaoId != null) {
+                            "Conta atualizada com sucesso!"
+                        } else {
+                            "Conta salva com sucesso!"
+                        }
+
                         Toast.makeText(
                             this@MainActivity,
-                            "Conta salva com sucesso!",
+                            mensagem,
                             Toast.LENGTH_SHORT
                         ).show()
 
@@ -318,6 +436,11 @@ class MainActivity : AppCompatActivity() {
             text = ""
             visibility = View.GONE
         }
+
+        contaEmEdicaoId = null
+
+        findViewById<Button>(R.id.btnSalvarConta).text =
+            "Salvar conta"
     }
 
 
@@ -454,6 +577,20 @@ class MainActivity : AppCompatActivity() {
                 contaViewModel.marcarComoPaga(conta.id)
             }
 
+            val btnEditarConta =
+                item.findViewById<Button>(R.id.btnEditarConta)
+
+            btnEditarConta.visibility =
+                if (conta.situacao == SituacaoConta.PENDENTE) {
+                    View.VISIBLE
+                } else {
+                    View.GONE
+                }
+
+            btnEditarConta.setOnClickListener {
+                abrirEdicao(conta)
+            }
+
             container.addView(item)
 
             if (index < contas.lastIndex) {
@@ -482,5 +619,38 @@ class MainActivity : AppCompatActivity() {
         return NumberFormat
             .getCurrencyInstance(Locale("pt", "BR"))
             .format(valorCentavos / 100.0)
+    }
+
+    private fun abrirEdicao(conta: Conta) {
+        contaEmEdicaoId = conta.id
+
+        findViewById<EditText>(R.id.etDescricaoConta)
+            .setText(conta.descricao)
+
+        findViewById<EditText>(R.id.etValorConta)
+            .setText(
+                java.math.BigDecimal.valueOf(
+                    conta.valorCentavos,
+                    2
+                ).toPlainString()
+            )
+
+        vencimentoSelecionadoMillis = conta.vencimentoMillis
+
+        findViewById<TextView>(R.id.tvVencimentoConta).text =
+            SimpleDateFormat(
+                "dd/MM/yyyy",
+                Locale("pt", "BR")
+            ).format(Date(conta.vencimentoMillis))
+
+        findViewById<TextView>(R.id.tvErroCadastroConta).apply {
+            text = ""
+            visibility = View.GONE
+        }
+
+        findViewById<Button>(R.id.btnSalvarConta).text =
+            "Atualizar conta"
+
+        mostrarTela(R.id.registerBillScreen)
     }
 }

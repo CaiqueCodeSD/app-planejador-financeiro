@@ -1,3 +1,4 @@
+
 package com.example.planejadorfinanceiro.presentation.conta
 
 import androidx.lifecycle.ViewModel
@@ -5,10 +6,10 @@ import androidx.lifecycle.viewModelScope
 import com.example.planejadorfinanceiro.domain.model.Conta
 import com.example.planejadorfinanceiro.domain.repository.ContaRepository
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.launch
 import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.launch
 
 data class CadastroContaUiState(
     val salvando: Boolean = false,
@@ -33,7 +34,8 @@ class ContaViewModel(
     fun salvarConta(
         descricao: String,
         valorEmReais: String,
-        vencimentoMillis: Long
+        vencimentoMillis: Long,
+        contaId: Long? = null
     ) {
         val descricaoValidada = descricao.trim()
         val valor = valorEmReais.trim()
@@ -51,8 +53,7 @@ class ContaViewModel(
         }
 
         val centavos = try {
-            valor.movePointRight(2)
-                .longValueExact()
+            valor.movePointRight(2).longValueExact()
         } catch (_: ArithmeticException) {
             atualizarErro("O valor deve ter no máximo duas casas decimais.")
             return
@@ -62,20 +63,35 @@ class ContaViewModel(
             _uiState.value = CadastroContaUiState(salvando = true)
 
             try {
-                repository.salvar(
+                val conta = if (contaId == null) {
                     Conta(
                         descricao = descricaoValidada,
                         valorCentavos = centavos,
                         vencimentoMillis = vencimentoMillis
                     )
-                )
+                } else {
+                    val existente = repository.buscarPorId(contaId)
+                        ?: throw IllegalStateException("A conta não foi encontrada.")
+
+                    existente.copy(
+                        descricao = descricaoValidada,
+                        valorCentavos = centavos,
+                        vencimentoMillis = vencimentoMillis
+                    )
+                }
+
+                repository.salvar(conta)
 
                 _uiState.value = CadastroContaUiState(
                     cadastroConcluido = true
                 )
             } catch (_: Exception) {
                 _uiState.value = CadastroContaUiState(
-                    mensagemErro = "Não foi possível salvar a conta."
+                    mensagemErro = if (contaId == null) {
+                        "Não foi possível salvar a conta."
+                    } else {
+                        "Não foi possível atualizar a conta."
+                    }
                 )
             }
         }
@@ -85,9 +101,8 @@ class ContaViewModel(
         viewModelScope.launch {
             try {
                 repository.marcarComoPaga(id)
-            } catch (e: Exception) {
-                // O tratamento de erro da operação será refinado
-                // junto com o feedback visual da interface.
+            } catch (_: Exception) {
+                // O tratamento de erro visual será aprimorado em etapa própria.
             }
         }
     }
