@@ -54,27 +54,37 @@ class ContaRepositoryImpl(
         )
     }
 
+
     private fun ContaEntity.toDomain(): Conta {
         return Conta(
             id = id,
+            uuid = uuid,
             descricao = descricao,
             valorCentavos = valorCentavos,
             vencimentoMillis = vencimentoMillis,
             situacao = SituacaoConta.valueOf(situacao),
-            criadaEmMillis = criadaEmMillis
+            criadaEmMillis = criadaEmMillis,
+            atualizadaEmMillis = atualizadaEmMillis,
+            statusSincronizacao = StatusSincronizacao.valueOf(
+                statusSincronizacao
+            )
         )
     }
 
     private fun Conta.toEntity(): ContaEntity {
         return ContaEntity(
             id = id,
+            uuid = uuid,
             descricao = descricao,
             valorCentavos = valorCentavos,
             vencimentoMillis = vencimentoMillis,
             situacao = situacao.name,
-            criadaEmMillis = criadaEmMillis
+            criadaEmMillis = criadaEmMillis,
+            atualizadaEmMillis = atualizadaEmMillis,
+            statusSincronizacao = statusSincronizacao.name
         )
     }
+
 
     override suspend fun buscarPendentesSincronizacao(): List<Conta> {
         return contaDao.buscarPendentesSincronizacao().map { it.toDomain() }

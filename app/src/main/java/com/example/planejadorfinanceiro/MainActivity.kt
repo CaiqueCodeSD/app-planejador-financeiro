@@ -14,13 +14,11 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.lifecycle.Lifecycle
-import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import com.example.planejadorfinanceiro.domain.model.Conta
 import com.example.planejadorfinanceiro.domain.model.SituacaoConta
 import com.example.planejadorfinanceiro.presentation.conta.ContaViewModel
-import com.example.planejadorfinanceiro.presentation.conta.ContaViewModelFactory
 import java.text.NumberFormat
 import java.text.SimpleDateFormat
 import java.util.Calendar
@@ -30,11 +28,11 @@ import kotlinx.coroutines.launch
 import androidx.activity.OnBackPressedCallback
 import androidx.appcompat.app.AlertDialog
 import android.content.res.ColorStateList
+import org.koin.androidx.viewmodel.ext.android.viewModel
 
 class MainActivity : AppCompatActivity() {
 
-    private lateinit var contaViewModel: ContaViewModel
-
+    private val contaViewModel: ContaViewModel by viewModel()
     private var contaEmEdicaoId: Long? = null
     private var listaVaziaView: TextView? = null
     private var vencimentoSelecionadoMillis: Long? = null
@@ -58,11 +56,6 @@ class MainActivity : AppCompatActivity() {
 
             insets
         }
-
-        contaViewModel = ViewModelProvider(
-            this,
-            ContaViewModelFactory(applicationContext)
-        )[ContaViewModel::class.java]
 
         configurarNavegacao()
         configurarFormulario()
