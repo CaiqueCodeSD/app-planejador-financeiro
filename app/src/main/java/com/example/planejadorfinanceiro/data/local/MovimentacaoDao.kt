@@ -5,7 +5,9 @@ import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import androidx.room.Update
+import androidx.room.Transaction
 import kotlinx.coroutines.flow.Flow
+
 
 @Dao
 interface MovimentacaoDao {
@@ -60,4 +62,31 @@ interface MovimentacaoDao {
         inicioMillis: Long,
         fimMillis: Long
     ): Flow<Long>
+
+    @Query("DELETE FROM movimentacoes WHERE id = :id")
+    suspend fun excluir(id: Long)
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun registrarExclusaoPendente(
+        exclusao: ExclusaoPendenteEntity
+    )
+
+    @Transaction
+    suspend fun excluirComRegistroPendente(
+        id: Long,
+        excluidaEmMillis: Long
+    ) {
+        val movimentacao = buscarPorId(id) ?: return
+
+        registrarExclusaoPendente(
+            ExclusaoPendenteEntity(
+                uuid = movimentacao.uuid,
+                excluidaEmMillis = excluidaEmMillis
+            )
+        )
+
+        excluir(id)
+    }
+
 }
+

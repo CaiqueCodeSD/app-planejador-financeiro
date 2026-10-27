@@ -1,3 +1,4 @@
+
 package com.example.planejadorfinanceiro.domain.repository
 
 import com.example.planejadorfinanceiro.domain.model.Movimentacao
@@ -17,6 +18,8 @@ interface MovimentacaoRepository {
     suspend fun buscarPorId(id: Long): Movimentacao?
 
     suspend fun salvar(movimentacao: Movimentacao): Long
+
+    suspend fun excluir(id: Long)
 
     suspend fun buscarPendentesSincronizacao(): List<Movimentacao>
 

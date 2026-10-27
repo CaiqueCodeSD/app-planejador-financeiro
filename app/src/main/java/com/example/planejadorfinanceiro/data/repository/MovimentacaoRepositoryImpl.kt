@@ -1,4 +1,3 @@
-
 package com.example.planejadorfinanceiro.data.repository
 
 import com.example.planejadorfinanceiro.data.local.MovimentacaoDao
@@ -14,27 +13,24 @@ class MovimentacaoRepositoryImpl(
     private val movimentacaoDao: MovimentacaoDao
 ) : MovimentacaoRepository {
 
-    override fun observarMovimentacoes(): Flow<List<Movimentacao>> {
-        return movimentacaoDao.observarTodas().map { movimentacoes ->
-            movimentacoes.map { it.toDomain() }
+    override fun observarMovimentacoes(): Flow<List<Movimentacao>> =
+        movimentacaoDao.observarTodas().map { lista ->
+            lista.map { it.toDomain() }
         }
-    }
 
     override fun observarTotalPorTipoNoPeriodo(
         tipo: TipoMovimentacao,
         inicioMillis: Long,
         fimMillis: Long
-    ): Flow<Long> {
-        return movimentacaoDao.observarTotalPorTipoNoPeriodo(
-            tipo = tipo.name,
-            inicioMillis = inicioMillis,
-            fimMillis = fimMillis
+    ): Flow<Long> =
+        movimentacaoDao.observarTotalPorTipoNoPeriodo(
+            tipo.name,
+            inicioMillis,
+            fimMillis
         )
-    }
 
-    override suspend fun buscarPorId(id: Long): Movimentacao? {
-        return movimentacaoDao.buscarPorId(id)?.toDomain()
-    }
+    override suspend fun buscarPorId(id: Long): Movimentacao? =
+        movimentacaoDao.buscarPorId(id)?.toDomain()
 
     override suspend fun salvar(movimentacao: Movimentacao): Long {
         val movimentacaoAtualizada = movimentacao.copy(
@@ -52,50 +48,46 @@ class MovimentacaoRepositoryImpl(
         }
     }
 
-    override suspend fun buscarPendentesSincronizacao(): List<Movimentacao> {
-        return movimentacaoDao.buscarPendentesSincronizacao()
-            .map { it.toDomain() }
+    override suspend fun excluir(id: Long) {
+        movimentacaoDao.excluirComRegistroPendente(
+            id = id,
+            excluidaEmMillis = System.currentTimeMillis()
+        )
     }
+
+    override suspend fun buscarPendentesSincronizacao(): List<Movimentacao> =
+        movimentacaoDao.buscarPendentesSincronizacao().map { it.toDomain() }
 
     override suspend fun marcarComoSincronizada(
         uuid: String,
         atualizadaEmMillis: Long
     ) {
-        movimentacaoDao.marcarComoSincronizada(
-            uuid = uuid,
-            atualizadaEmMillis = atualizadaEmMillis
-        )
+        movimentacaoDao.marcarComoSincronizada(uuid, atualizadaEmMillis)
     }
 
-    private fun MovimentacaoEntity.toDomain(): Movimentacao {
-        return Movimentacao(
-            id = id,
-            uuid = uuid,
-            descricao = descricao,
-            valorCentavos = valorCentavos,
-            tipo = TipoMovimentacao.valueOf(tipo),
-            dataMillis = dataMillis,
-            categoria = categoria,
-            criadaEmMillis = criadaEmMillis,
-            atualizadaEmMillis = atualizadaEmMillis,
-            statusSincronizacao = StatusSincronizacao.valueOf(
-                statusSincronizacao
-            )
-        )
-    }
+    private fun MovimentacaoEntity.toDomain() = Movimentacao(
+        id = id,
+        uuid = uuid,
+        descricao = descricao,
+        valorCentavos = valorCentavos,
+        tipo = TipoMovimentacao.valueOf(tipo),
+        dataMillis = dataMillis,
+        categoria = categoria,
+        criadaEmMillis = criadaEmMillis,
+        atualizadaEmMillis = atualizadaEmMillis,
+        statusSincronizacao = StatusSincronizacao.valueOf(statusSincronizacao)
+    )
 
-    private fun Movimentacao.toEntity(): MovimentacaoEntity {
-        return MovimentacaoEntity(
-            id = id,
-            uuid = uuid,
-            descricao = descricao,
-            valorCentavos = valorCentavos,
-            tipo = tipo.name,
-            dataMillis = dataMillis,
-            categoria = categoria,
-            criadaEmMillis = criadaEmMillis,
-            atualizadaEmMillis = atualizadaEmMillis,
-            statusSincronizacao = statusSincronizacao.name
-        )
-    }
+    private fun Movimentacao.toEntity() = MovimentacaoEntity(
+        id = id,
+        uuid = uuid,
+        descricao = descricao,
+        valorCentavos = valorCentavos,
+        tipo = tipo.name,
+        dataMillis = dataMillis,
+        categoria = categoria,
+        criadaEmMillis = criadaEmMillis,
+        atualizadaEmMillis = atualizadaEmMillis,
+        statusSincronizacao = statusSincronizacao.name
+    )
 }
