@@ -1,15 +1,22 @@
+
 package com.example.planejadorfinanceiro
 
 import android.app.DatePickerDialog
+import android.content.res.ColorStateList
 import android.os.Bundle
 import android.util.TypedValue
 import android.view.View
+import android.widget.ArrayAdapter
 import android.widget.Button
 import android.widget.EditText
 import android.widget.LinearLayout
+import android.widget.RadioGroup
+import android.widget.Spinner
 import android.widget.TextView
 import android.widget.Toast
+import androidx.activity.OnBackPressedCallback
 import androidx.activity.enableEdgeToEdge
+import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
@@ -17,43 +24,47 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import com.example.planejadorfinanceiro.domain.model.Conta
+import com.example.planejadorfinanceiro.domain.model.Movimentacao
 import com.example.planejadorfinanceiro.domain.model.SituacaoConta
+import com.example.planejadorfinanceiro.domain.model.TipoMovimentacao
 import com.example.planejadorfinanceiro.presentation.conta.ContaViewModel
+import com.example.planejadorfinanceiro.presentation.dashboard.DashboardViewModel
+import com.example.planejadorfinanceiro.presentation.movimentacao.MovimentacaoViewModel
 import java.text.NumberFormat
 import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.Date
 import java.util.Locale
 import kotlinx.coroutines.launch
-import androidx.activity.OnBackPressedCallback
-import androidx.appcompat.app.AlertDialog
-import android.content.res.ColorStateList
 import org.koin.androidx.viewmodel.ext.android.viewModel
 
 class MainActivity : AppCompatActivity() {
 
     private val contaViewModel: ContaViewModel by viewModel()
+    private val dashboardViewModel: DashboardViewModel by viewModel()
+    private val movimentacaoViewModel: MovimentacaoViewModel by viewModel()
+
     private var contaEmEdicaoId: Long? = null
     private var listaVaziaView: TextView? = null
     private var vencimentoSelecionadoMillis: Long? = null
+    private var movimentacaoSelecionadaMillis: Long? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
         enableEdgeToEdge()
         setContentView(R.layout.activity_main)
+
         listaVaziaView = findViewById(R.id.tvListaVazia)
 
         ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main)) { view, insets ->
             val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
-
             view.setPadding(
                 systemBars.left,
                 systemBars.top,
                 systemBars.right,
                 systemBars.bottom
             )
-
             insets
         }
 
@@ -61,6 +72,9 @@ class MainActivity : AppCompatActivity() {
         configurarFormulario()
         observarEstadoCadastro()
         observarContas()
+        observarDashboard()
+        configurarFormularioMovimentacao()
+        observarEstadoMovimentacao()
         configurarBotaoVoltar()
     }
 
@@ -69,69 +83,20 @@ class MainActivity : AppCompatActivity() {
     // --------------------------------------------------
 
     private fun configurarNavegacao() {
-        val navHome = findViewById<View>(R.id.navHome)
-        val navBills = findViewById<View>(R.id.navBills)
-
-        val dashboardScreen = findViewById<View>(R.id.dashboardScreen)
-        val billsScreen = findViewById<View>(R.id.billsScreen)
-        val registerBillScreen = findViewById<View>(R.id.registerBillScreen)
-
-        val navHomeLabel = findViewById<TextView>(R.id.navHomeLabel)
-        val navBillsLabel = findViewById<TextView>(R.id.navBillsLabel)
-
-        fun selecionarTela(contasSelecionadas: Boolean) {
-            dashboardScreen.visibility =
-                if (contasSelecionadas) View.GONE else View.VISIBLE
-
-            billsScreen.visibility =
-                if (contasSelecionadas) View.VISIBLE else View.GONE
-
-            registerBillScreen.visibility = View.GONE
-
-            navHome.setBackgroundResource(
-                if (contasSelecionadas) {
-                    android.R.color.transparent
-                } else {
-                    R.drawable.pf_bg_nav_selected
-                }
-            )
-
-            navBills.setBackgroundResource(
-                if (contasSelecionadas) {
-                    R.drawable.pf_bg_nav_selected
-                } else {
-                    android.R.color.transparent
-                }
-            )
-
-            navHomeLabel.setTextColor(
-                getColor(
-                    if (contasSelecionadas) {
-                        R.color.pf_text_secondary
-                    } else {
-                        R.color.pf_background
-                    }
-                )
-            )
-
-            navBillsLabel.setTextColor(
-                getColor(
-                    if (contasSelecionadas) {
-                        R.color.pf_background
-                    } else {
-                        R.color.pf_text_secondary
-                    }
-                )
-            )
+        findViewById<View>(R.id.navHome).setOnClickListener {
+            limparFormularioMovimentacao()
+            mostrarTela(R.id.dashboardScreen)
+            atualizarNavegacao(isHome = true)
         }
 
-        navHome.setOnClickListener {
-            selecionarTela(contasSelecionadas = false)
+        findViewById<View>(R.id.navBills).setOnClickListener {
+            limparFormularioMovimentacao()
+            mostrarTela(R.id.billsScreen)
+            atualizarNavegacao(isHome = false)
         }
 
-        navBills.setOnClickListener {
-            selecionarTela(contasSelecionadas = true)
-        }
+        mostrarTela(R.id.dashboardScreen)
+        atualizarNavegacao(isHome = true)
     }
 
     private fun mostrarTela(telaId: Int) {
@@ -143,30 +108,25 @@ class MainActivity : AppCompatActivity() {
 
         findViewById<View>(R.id.registerBillScreen).visibility =
             if (telaId == R.id.registerBillScreen) View.VISIBLE else View.GONE
-    }
 
+        findViewById<View>(R.id.registerMovementScreen).visibility =
+            if (telaId == R.id.registerMovementScreen) View.VISIBLE else View.GONE
+    }
 
     private fun atualizarNavegacao(isHome: Boolean) {
         val navHome = findViewById<View>(R.id.navHome)
         val navBills = findViewById<View>(R.id.navBills)
-
         val navHomeLabel = findViewById<TextView>(R.id.navHomeLabel)
         val navBillsLabel = findViewById<TextView>(R.id.navBillsLabel)
 
         navHome.setBackgroundResource(
-            if (isHome) {
-                R.drawable.pf_bg_nav_selected
-            } else {
-                android.R.color.transparent
-            }
+            if (isHome) R.drawable.pf_bg_nav_selected
+            else android.R.color.transparent
         )
 
         navBills.setBackgroundResource(
-            if (isHome) {
-                android.R.color.transparent
-            } else {
-                R.drawable.pf_bg_nav_selected
-            }
+            if (isHome) android.R.color.transparent
+            else R.drawable.pf_bg_nav_selected
         )
 
         navHomeLabel.setTextColor(
@@ -184,78 +144,74 @@ class MainActivity : AppCompatActivity() {
         )
     }
 
-
     // --------------------------------------------------
-    // FORMULÁRIO DE CADASTRO
+    // BOTÃO VOLTAR
     // --------------------------------------------------
-
 
     private fun configurarBotaoVoltar() {
         onBackPressedDispatcher.addCallback(
             this,
             object : OnBackPressedCallback(true) {
                 override fun handleOnBackPressed() {
-                    val telaCadastro = findViewById<View>(
-                        R.id.registerBillScreen
-                    )
-
-                    val telaContas = findViewById<View>(
-                        R.id.billsScreen
-                    )
-
                     when {
-                        telaCadastro.visibility == View.VISIBLE -> {
+                        findViewById<View>(R.id.registerMovementScreen)
+                            .visibility == View.VISIBLE -> {
+                            limparFormularioMovimentacao()
+                            mostrarTela(R.id.dashboardScreen)
+                            atualizarNavegacao(isHome = true)
+                        }
+
+                        findViewById<View>(R.id.registerBillScreen)
+                            .visibility == View.VISIBLE -> {
                             limparFormulario()
                             mostrarTela(R.id.billsScreen)
                             atualizarNavegacao(isHome = false)
                         }
 
-                        telaContas.visibility == View.VISIBLE -> {
+                        findViewById<View>(R.id.billsScreen)
+                            .visibility == View.VISIBLE -> {
                             mostrarTela(R.id.dashboardScreen)
                             atualizarNavegacao(isHome = true)
                         }
 
-
-                        else -> {
-                            val dialog = AlertDialog.Builder(this@MainActivity)
-                                .setTitle("Sair do aplicativo?")
-                                .setMessage(
-                                    "Deseja sair do Planejador Financeiro?"
-                                )
-                                .setNegativeButton("Continuar usando", null)
-                                .setPositiveButton("Sair", null)
-                                .create()
-
-                            dialog.setOnShowListener {
-                                val verde = getColor(R.color.pf_lime)
-
-                                dialog.getButton(AlertDialog.BUTTON_POSITIVE)
-                                    .setTextColor(verde)
-
-                                dialog.getButton(AlertDialog.BUTTON_NEGATIVE)
-                                    .setTextColor(verde)
-
-                                dialog.getButton(AlertDialog.BUTTON_POSITIVE)
-                                    .setOnClickListener {
-                                        dialog.dismiss()
-                                        finish()
-                                    }
-
-                                dialog.getButton(AlertDialog.BUTTON_NEGATIVE)
-                                    .setOnClickListener {
-                                        dialog.dismiss()
-                                    }
-                            }
-
-                            dialog.show()
-                        }
-
+                        else -> confirmarSaida()
                     }
                 }
             }
         )
     }
 
+    private fun confirmarSaida() {
+        val dialog = AlertDialog.Builder(this)
+            .setTitle("Sair do aplicativo?")
+            .setMessage("Deseja sair do Planejador Financeiro?")
+            .setNegativeButton("Continuar usando", null)
+            .setPositiveButton("Sair", null)
+            .create()
+
+        dialog.setOnShowListener {
+            val verde = getColor(R.color.pf_lime)
+
+            dialog.getButton(AlertDialog.BUTTON_POSITIVE).apply {
+                setTextColor(verde)
+                setOnClickListener {
+                    dialog.dismiss()
+                    finish()
+                }
+            }
+
+            dialog.getButton(AlertDialog.BUTTON_NEGATIVE).apply {
+                setTextColor(verde)
+                setOnClickListener { dialog.dismiss() }
+            }
+        }
+
+        dialog.show()
+    }
+
+    // --------------------------------------------------
+    // CADASTRO DE CONTAS
+    // --------------------------------------------------
 
     private fun configurarFormulario() {
         findViewById<View>(R.id.btnNovaConta).setOnClickListener {
@@ -277,13 +233,11 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-
-
     private fun abrirCadastro() {
         limparFormulario()
         mostrarTela(R.id.registerBillScreen)
+        atualizarNavegacao(isHome = false)
     }
-
 
     private fun abrirSeletorData() {
         val calendario = Calendar.getInstance()
@@ -305,13 +259,11 @@ class MainActivity : AppCompatActivity() {
 
                 vencimentoSelecionadoMillis = calendario.timeInMillis
 
-                val formato = SimpleDateFormat(
-                    "dd/MM/yyyy",
-                    Locale("pt", "BR")
-                )
-
                 findViewById<TextView>(R.id.tvVencimentoConta).text =
-                    formato.format(calendario.time)
+                    SimpleDateFormat(
+                        "dd/MM/yyyy",
+                        Locale("pt", "BR")
+                    ).format(calendario.time)
 
                 findViewById<TextView>(R.id.tvErroCadastroConta).apply {
                     text = ""
@@ -324,15 +276,12 @@ class MainActivity : AppCompatActivity() {
         ).show()
     }
 
-
     private fun salvarConta() {
         val descricao = findViewById<EditText>(R.id.etDescricaoConta)
-            .text
-            .toString()
+            .text.toString()
 
         val valor = findViewById<EditText>(R.id.etValorConta)
-            .text
-            .toString()
+            .text.toString()
 
         val vencimento = vencimentoSelecionadoMillis
 
@@ -353,60 +302,42 @@ class MainActivity : AppCompatActivity() {
         )
     }
 
-
-
     private fun observarEstadoCadastro() {
         lifecycleScope.launch {
             repeatOnLifecycle(Lifecycle.State.STARTED) {
                 contaViewModel.uiState.collect { estado ->
-                    val campoErro = findViewById<TextView>(
-                        R.id.tvErroCadastroConta
-                    )
+                    val campoErro =
+                        findViewById<TextView>(R.id.tvErroCadastroConta)
 
                     campoErro.text = estado.mensagemErro.orEmpty()
                     campoErro.visibility =
-                        if (estado.mensagemErro != null) {
-                            View.VISIBLE
-                        } else {
-                            View.GONE
-                        }
-
+                        if (estado.mensagemErro != null) View.VISIBLE
+                        else View.GONE
 
                     findViewById<Button>(R.id.btnSalvarConta).apply {
                         isEnabled = !estado.salvando
-
                         text = when {
                             estado.salvando && contaEmEdicaoId != null ->
                                 "Atualizando..."
-
-                            estado.salvando ->
-                                "Salvando..."
-
-                            contaEmEdicaoId != null ->
-                                "Atualizar conta"
-
-                            else ->
-                                "Salvar conta"
+                            estado.salvando -> "Salvando..."
+                            contaEmEdicaoId != null -> "Atualizar conta"
+                            else -> "Salvar conta"
                         }
                     }
 
-
                     if (estado.cadastroConcluido) {
-                        val mensagem = if (contaEmEdicaoId != null) {
-                            "Conta atualizada com sucesso!"
-                        } else {
-                            "Conta salva com sucesso!"
-                        }
-
                         Toast.makeText(
                             this@MainActivity,
-                            mensagem,
+                            if (contaEmEdicaoId != null) {
+                                "Conta atualizada com sucesso!"
+                            } else {
+                                "Conta salva com sucesso!"
+                            },
                             Toast.LENGTH_SHORT
                         ).show()
 
                         limparFormulario()
                         contaViewModel.limparFeedback()
-
                         mostrarTela(R.id.billsScreen)
                         atualizarNavegacao(isHome = false)
                     }
@@ -414,7 +345,6 @@ class MainActivity : AppCompatActivity() {
             }
         }
     }
-
 
     private fun limparFormulario() {
         findViewById<EditText>(R.id.etDescricaoConta).text.clear()
@@ -431,22 +361,11 @@ class MainActivity : AppCompatActivity() {
         }
 
         contaEmEdicaoId = null
-
-        findViewById<Button>(R.id.btnSalvarConta).text =
-            "Salvar conta"
-    }
-
-
-    private fun exibirErro(mensagem: String) {
-        Toast.makeText(
-            this,
-            mensagem,
-            Toast.LENGTH_LONG
-        ).show()
+        findViewById<Button>(R.id.btnSalvarConta).text = "Salvar conta"
     }
 
     // --------------------------------------------------
-    // LISTA REATIVA DE CONTAS
+    // LISTA DE CONTAS
     // --------------------------------------------------
 
     private fun observarContas() {
@@ -468,12 +387,8 @@ class MainActivity : AppCompatActivity() {
             it.situacao == SituacaoConta.PAGA
         }
 
-        val totalPendenteCentavos = pendentes.sumOf {
-            it.valorCentavos
-        }
-
         findViewById<TextView>(R.id.tvTotalPendente).text =
-            formatarMoeda(totalPendenteCentavos)
+            formatarMoeda(pendentes.sumOf { it.valorCentavos })
 
         findViewById<TextView>(R.id.tvResumoPendentes).text =
             if (pendentes.size == 1) {
@@ -491,9 +406,6 @@ class MainActivity : AppCompatActivity() {
         val container = findViewById<LinearLayout>(R.id.containerListaContas)
         val listaVazia = listaVaziaView ?: return
 
-        listaVazia.visibility = View.GONE
-
-        // O container é reconstruído a cada atualização do Flow.
         container.removeAllViews()
 
         if (contas.isEmpty()) {
@@ -518,25 +430,20 @@ class MainActivity : AppCompatActivity() {
             item.findViewById<TextView>(R.id.tvDiaConta).text =
                 calendario.get(Calendar.DAY_OF_MONTH).toString()
 
-            val mes = SimpleDateFormat(
-                "MMM",
-                Locale("pt", "BR")
-            ).format(Date(conta.vencimentoMillis))
-                .uppercase(Locale("pt", "BR"))
-                .replace(".", "")
-
-            item.findViewById<TextView>(R.id.tvMesConta).text = mes
+            item.findViewById<TextView>(R.id.tvMesConta).text =
+                SimpleDateFormat("MMM", Locale("pt", "BR"))
+                    .format(Date(conta.vencimentoMillis))
+                    .uppercase(Locale("pt", "BR"))
+                    .replace(".", "")
 
             item.findViewById<TextView>(R.id.tvDescricaoItemConta).text =
                 conta.descricao
 
-            val formatoData = SimpleDateFormat(
-                "dd/MM/yyyy",
-                Locale("pt", "BR")
-            )
-
             item.findViewById<TextView>(R.id.tvVencimentoItemConta).text =
-                "Vencimento: ${formatoData.format(Date(conta.vencimentoMillis))}"
+                "Vencimento: " + SimpleDateFormat(
+                    "dd/MM/yyyy",
+                    Locale("pt", "BR")
+                ).format(Date(conta.vencimentoMillis))
 
             val textoSituacao = when (conta.situacao) {
                 SituacaoConta.PENDENTE -> "Pendente"
@@ -556,32 +463,30 @@ class MainActivity : AppCompatActivity() {
             item.findViewById<TextView>(R.id.tvValorItemConta).text =
                 formatarMoeda(conta.valorCentavos)
 
-            val btnMarcarComoPaga =
-                item.findViewById<Button>(R.id.btnMarcarComoPaga)
+            item.findViewById<Button>(R.id.btnMarcarComoPaga).apply {
+                visibility =
+                    if (conta.situacao == SituacaoConta.PENDENTE) {
+                        View.VISIBLE
+                    } else {
+                        View.GONE
+                    }
 
-            btnMarcarComoPaga.visibility =
-                if (conta.situacao == SituacaoConta.PENDENTE) {
-                    View.VISIBLE
-                } else {
-                    View.GONE
+                setOnClickListener {
+                    contaViewModel.marcarComoPaga(conta.id)
                 }
-
-            btnMarcarComoPaga.setOnClickListener {
-                contaViewModel.marcarComoPaga(conta.id)
             }
 
-            val btnEditarConta =
-                item.findViewById<Button>(R.id.btnEditarConta)
+            item.findViewById<Button>(R.id.btnEditarConta).apply {
+                visibility =
+                    if (conta.situacao == SituacaoConta.PENDENTE) {
+                        View.VISIBLE
+                    } else {
+                        View.GONE
+                    }
 
-            btnEditarConta.visibility =
-                if (conta.situacao == SituacaoConta.PENDENTE) {
-                    View.VISIBLE
-                } else {
-                    View.GONE
+                setOnClickListener {
+                    abrirEdicao(conta)
                 }
-
-            btnEditarConta.setOnClickListener {
-                abrirEdicao(conta)
             }
 
             container.addView(item)
@@ -591,7 +496,7 @@ class MainActivity : AppCompatActivity() {
                     setBackgroundColor(getColor(R.color.pf_divider))
                 }
 
-                val alturaDivisor = TypedValue.applyDimension(
+                val altura = TypedValue.applyDimension(
                     TypedValue.COMPLEX_UNIT_DIP,
                     1f,
                     resources.displayMetrics
@@ -601,17 +506,11 @@ class MainActivity : AppCompatActivity() {
                     divisor,
                     LinearLayout.LayoutParams(
                         LinearLayout.LayoutParams.MATCH_PARENT,
-                        alturaDivisor
+                        altura
                     )
                 )
             }
         }
-    }
-
-    private fun formatarMoeda(valorCentavos: Long): String {
-        return NumberFormat
-            .getCurrencyInstance(Locale("pt", "BR"))
-            .format(valorCentavos / 100.0)
     }
 
     private fun abrirEdicao(conta: Conta) {
@@ -620,13 +519,9 @@ class MainActivity : AppCompatActivity() {
         findViewById<EditText>(R.id.etDescricaoConta)
             .setText(conta.descricao)
 
-        findViewById<EditText>(R.id.etValorConta)
-            .setText(
-                java.math.BigDecimal.valueOf(
-                    conta.valorCentavos,
-                    2
-                ).toPlainString()
-            )
+        findViewById<EditText>(R.id.etValorConta).setText(
+            java.math.BigDecimal.valueOf(conta.valorCentavos, 2).toPlainString()
+        )
 
         vencimentoSelecionadoMillis = conta.vencimentoMillis
 
@@ -641,9 +536,349 @@ class MainActivity : AppCompatActivity() {
             visibility = View.GONE
         }
 
-        findViewById<Button>(R.id.btnSalvarConta).text =
-            "Atualizar conta"
+        findViewById<Button>(R.id.btnSalvarConta).text = "Atualizar conta"
 
         mostrarTela(R.id.registerBillScreen)
+        atualizarNavegacao(isHome = false)
+    }
+
+    // --------------------------------------------------
+    // DASHBOARD
+    // --------------------------------------------------
+
+    private fun observarDashboard() {
+        lifecycleScope.launch {
+            repeatOnLifecycle(Lifecycle.State.STARTED) {
+                dashboardViewModel.uiState.collect { estado ->
+                    findViewById<TextView>(R.id.tvSaldo).text =
+                        formatarMoeda(estado.saldoCentavos)
+
+                    findViewById<TextView>(R.id.tvReceitas).text =
+                        formatarMoeda(estado.receitasCentavos)
+
+                    findViewById<TextView>(R.id.tvDespesas).text =
+                        formatarMoeda(estado.despesasCentavos)
+
+                    atualizarMovimentacoesRecentes(
+                        estado.movimentacoesRecentes
+                    )
+                }
+            }
+        }
+    }
+
+    private fun atualizarMovimentacoesRecentes(
+        movimentacoes: List<Movimentacao>
+    ) {
+        val container = findViewById<LinearLayout>(
+            R.id.containerMovimentacoesRecentes
+        )
+
+        val textoVazio = findViewById<TextView>(
+            R.id.tvMovimentacoesVazias
+        )
+
+        container.removeAllViews()
+
+        if (movimentacoes.isEmpty()) {
+            textoVazio.visibility = View.VISIBLE
+            return
+        }
+
+        textoVazio.visibility = View.GONE
+
+        movimentacoes.forEachIndexed { index, movimentacao ->
+            val item = layoutInflater.inflate(
+                R.layout.item_movimentacao_recente,
+                container,
+                false
+            )
+
+            val isReceita = movimentacao.tipo == TipoMovimentacao.RECEITA
+
+            item.findViewById<TextView>(R.id.tvIconeMovimentacao).apply {
+                text = if (isReceita) "↑" else "↓"
+                setTextColor(
+                    getColor(
+                        if (isReceita) R.color.pf_lime
+                        else R.color.pf_expense
+                    )
+                )
+            }
+
+            item.findViewById<TextView>(R.id.tvDescricaoMovimentacao).text =
+                movimentacao.descricao
+
+            val dataFormatada = SimpleDateFormat(
+                "dd MMM",
+                Locale("pt", "BR")
+            ).format(Date(movimentacao.dataMillis))
+
+            item.findViewById<TextView>(R.id.tvDataMovimentacao).text =
+                "${if (isReceita) "Receita" else "Despesa"} · $dataFormatada"
+
+            item.findViewById<TextView>(R.id.tvValorMovimentacao).apply {
+                text = (if (isReceita) "+ " else "- ") +
+                        formatarMoeda(movimentacao.valorCentavos)
+
+                setTextColor(
+                    getColor(
+                        if (isReceita) R.color.pf_lime
+                        else R.color.pf_expense
+                    )
+                )
+            }
+
+            container.addView(item)
+
+            if (index < movimentacoes.lastIndex) {
+                val divisor = View(this).apply {
+                    setBackgroundColor(getColor(R.color.pf_divider))
+                }
+
+                val altura = TypedValue.applyDimension(
+                    TypedValue.COMPLEX_UNIT_DIP,
+                    1f,
+                    resources.displayMetrics
+                ).toInt().coerceAtLeast(1)
+
+                container.addView(
+                    divisor,
+                    LinearLayout.LayoutParams(
+                        LinearLayout.LayoutParams.MATCH_PARENT,
+                        altura
+                    )
+                )
+            }
+        }
+    }
+
+    // --------------------------------------------------
+    // CADASTRO DE MOVIMENTAÇÕES
+    // --------------------------------------------------
+
+    private fun configurarFormularioMovimentacao() {
+        val categorias = listOf(
+            "Selecione uma categoria",
+            "Salário",
+            "Freelance",
+            "Investimentos",
+            "Moradia",
+            "Alimentação",
+            "Transporte",
+            "Saúde",
+            "Educação",
+            "Lazer",
+            "Outros"
+        )
+
+        val adapter = ArrayAdapter(
+            this,
+            android.R.layout.simple_spinner_item,
+            categorias
+        ).apply {
+            setDropDownViewResource(
+                android.R.layout.simple_spinner_dropdown_item
+            )
+        }
+
+        findViewById<Spinner>(R.id.spCategoriaMovimentacao).adapter = adapter
+
+        findViewById<View>(R.id.btnNovaMovimentacao).setOnClickListener {
+            abrirCadastroMovimentacao()
+        }
+
+        findViewById<View>(R.id.tvDataMovimentacaoCadastro).setOnClickListener {
+            selecionarDataMovimentacao()
+        }
+
+        findViewById<Button>(R.id.btnSalvarMovimentacao).setOnClickListener {
+            salvarMovimentacao()
+        }
+
+        findViewById<Button>(R.id.btnCancelarMovimentacao).setOnClickListener {
+            limparFormularioMovimentacao()
+            mostrarTela(R.id.dashboardScreen)
+            atualizarNavegacao(isHome = true)
+        }
+    }
+
+    private fun abrirCadastroMovimentacao() {
+        limparFormularioMovimentacao()
+
+        val calendario = Calendar.getInstance().apply {
+            set(Calendar.HOUR_OF_DAY, 12)
+            set(Calendar.MINUTE, 0)
+            set(Calendar.SECOND, 0)
+            set(Calendar.MILLISECOND, 0)
+        }
+
+        movimentacaoSelecionadaMillis = calendario.timeInMillis
+        atualizarDataMovimentacao()
+
+        mostrarTela(R.id.registerMovementScreen)
+        atualizarNavegacao(isHome = true)
+    }
+
+    private fun selecionarDataMovimentacao() {
+        val calendario = Calendar.getInstance().apply {
+            timeInMillis = movimentacaoSelecionadaMillis
+                ?: System.currentTimeMillis()
+        }
+
+        DatePickerDialog(
+            this,
+            { _, ano, mes, dia ->
+                movimentacaoSelecionadaMillis = Calendar.getInstance().apply {
+                    set(Calendar.YEAR, ano)
+                    set(Calendar.MONTH, mes)
+                    set(Calendar.DAY_OF_MONTH, dia)
+                    set(Calendar.HOUR_OF_DAY, 12)
+                    set(Calendar.MINUTE, 0)
+                    set(Calendar.SECOND, 0)
+                    set(Calendar.MILLISECOND, 0)
+                }.timeInMillis
+
+                atualizarDataMovimentacao()
+            },
+            calendario.get(Calendar.YEAR),
+            calendario.get(Calendar.MONTH),
+            calendario.get(Calendar.DAY_OF_MONTH)
+        ).show()
+    }
+
+    private fun atualizarDataMovimentacao() {
+        val data = movimentacaoSelecionadaMillis ?: return
+
+        findViewById<TextView>(R.id.tvDataMovimentacaoCadastro).text =
+            SimpleDateFormat(
+                "dd/MM/yyyy",
+                Locale("pt", "BR")
+            ).format(Date(data))
+    }
+
+    private fun salvarMovimentacao() {
+        val descricao = findViewById<EditText>(
+            R.id.etDescricaoMovimentacao
+        ).text.toString().trim()
+
+        val valor = findViewById<EditText>(
+            R.id.etValorMovimentacao
+        ).text.toString().trim()
+
+        val tipo = when (
+            findViewById<RadioGroup>(R.id.rgTipoMovimentacao)
+                .checkedRadioButtonId
+        ) {
+            R.id.rbReceita -> TipoMovimentacao.RECEITA
+            R.id.rbDespesa -> TipoMovimentacao.DESPESA
+            else -> null
+        }
+
+        val spinner = findViewById<Spinner>(R.id.spCategoriaMovimentacao)
+        val categoria = if (spinner.selectedItemPosition > 0) {
+            spinner.selectedItem.toString()
+        } else {
+            ""
+        }
+
+        val data = movimentacaoSelecionadaMillis
+
+        if (data == null) {
+            exibirErroMovimentacao("Selecione a data da movimentação.")
+            return
+        }
+
+        if (tipo == null) {
+            exibirErroMovimentacao("Selecione receita ou despesa.")
+            return
+        }
+
+        if (categoria.isBlank()) {
+            exibirErroMovimentacao("Selecione uma categoria.")
+            return
+        }
+
+        findViewById<TextView>(R.id.tvErroMovimentacao).visibility = View.GONE
+
+        movimentacaoViewModel.salvarMovimentacao(
+            descricao = descricao,
+            valorEmReais = valor,
+            tipo = tipo,
+            dataMillis = data,
+            categoria = categoria
+        )
+    }
+
+    private fun observarEstadoMovimentacao() {
+        lifecycleScope.launch {
+            repeatOnLifecycle(Lifecycle.State.STARTED) {
+                movimentacaoViewModel.uiState.collect { estado ->
+                    findViewById<Button>(R.id.btnSalvarMovimentacao).apply {
+                        isEnabled = !estado.salvando
+                        text = if (estado.salvando) {
+                            "Salvando..."
+                        } else {
+                            "Salvar movimentação"
+                        }
+                    }
+
+                    findViewById<TextView>(R.id.tvErroMovimentacao).apply {
+                        if (estado.mensagemErro != null) {
+                            text = estado.mensagemErro
+                            visibility = View.VISIBLE
+                        } else {
+                            visibility = View.GONE
+                        }
+                    }
+
+                    if (estado.operacaoConcluida) {
+                        Toast.makeText(
+                            this@MainActivity,
+                            estado.mensagemSucesso
+                                ?: "Movimentação salva com sucesso.",
+                            Toast.LENGTH_SHORT
+                        ).show()
+
+                        limparFormularioMovimentacao()
+                        mostrarTela(R.id.dashboardScreen)
+                        atualizarNavegacao(isHome = true)
+                    }
+                }
+            }
+        }
+    }
+
+    private fun exibirErroMovimentacao(mensagem: String) {
+        findViewById<TextView>(R.id.tvErroMovimentacao).apply {
+            text = mensagem
+            visibility = View.VISIBLE
+        }
+    }
+
+    private fun limparFormularioMovimentacao() {
+        findViewById<EditText>(R.id.etDescricaoMovimentacao).text.clear()
+        findViewById<EditText>(R.id.etValorMovimentacao).text.clear()
+
+        findViewById<RadioGroup>(R.id.rgTipoMovimentacao).check(R.id.rbReceita)
+        findViewById<Spinner>(R.id.spCategoriaMovimentacao).setSelection(0)
+
+        findViewById<TextView>(R.id.tvErroMovimentacao).apply {
+            text = ""
+            visibility = View.GONE
+        }
+
+        movimentacaoSelecionadaMillis = null
+        movimentacaoViewModel.limparFeedback()
+    }
+
+    // --------------------------------------------------
+    // UTILITÁRIO
+    // --------------------------------------------------
+
+    private fun formatarMoeda(valorCentavos: Long): String {
+        return NumberFormat
+            .getCurrencyInstance(Locale("pt", "BR"))
+            .format(valorCentavos / 100.0)
     }
 }

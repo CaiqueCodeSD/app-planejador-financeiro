@@ -28,6 +28,7 @@
             android:paddingBottom="16dp"
             android:scrollbars="none">
 
+            <!-- O ScrollView deve ter apenas um filho direto -->
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
@@ -70,7 +71,7 @@
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="24dp"
+                    android:layout_marginTop="20dp"
                     android:background="@drawable/pf_bg_balance_card"
                     android:orientation="vertical"
                     android:padding="22dp">
@@ -89,7 +90,7 @@
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:layout_marginTop="10dp"
-                        android:text="R$ 2.450,00"
+                        android:text="R$ 0,00"
                         android:textColor="@color/pf_text_primary"
                         android:textSize="32sp"
                         android:textStyle="bold"
@@ -143,7 +144,7 @@
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
                             android:layout_marginTop="12dp"
-                            android:text="R$ 3.200,00"
+                            android:text="R$ 0,00"
                             android:textColor="@color/pf_text_primary"
                             android:textSize="18sp"
                             android:textStyle="bold"
@@ -184,7 +185,7 @@
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
                             android:layout_marginTop="12dp"
-                            android:text="R$ 750,00"
+                            android:text="R$ 0,00"
                             android:textColor="@color/pf_text_primary"
                             android:textSize="18sp"
                             android:textStyle="bold"
@@ -204,7 +205,18 @@
                     </LinearLayout>
                 </LinearLayout>
 
-                <!-- MOVIMENTAÇÕES -->
+                <!-- MOVIMENTAÇÕES RECENTES -->
+                <Button
+                    android:id="@+id/btnNovaMovimentacao"
+                    android:layout_width="match_parent"
+                    android:layout_height="52dp"
+                    android:layout_marginTop="20dp"
+                    android:text="+ Nova movimentação"
+                    android:textAllCaps="false"
+                    android:textColor="@color/pf_background"
+                    android:textStyle="bold"
+                    app:backgroundTint="@color/pf_lime" />
+
                 <TextView
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
@@ -230,166 +242,22 @@
                     android:orientation="vertical"
                     android:paddingHorizontal="16dp">
 
-                    <!-- SALÁRIO -->
-                    <LinearLayout
+                    <TextView
+                        android:id="@+id/tvMovimentacoesVazias"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:gravity="center_vertical"
-                        android:orientation="horizontal"
-                        android:paddingVertical="16dp">
+                        android:gravity="center"
+                        android:padding="24dp"
+                        android:text="Nenhuma movimentação registrada neste mês."
+                        android:textColor="@color/pf_text_secondary"
+                        android:textSize="13sp"
+                        android:visibility="gone" />
 
-                        <TextView
-                            android:layout_width="42dp"
-                            android:layout_height="42dp"
-                            android:background="@color/pf_surface"
-                            android:gravity="center"
-                            android:text="R$"
-                            android:textColor="@color/pf_lime"
-                            android:textStyle="bold"
-                            android:textSize="14sp" />
-
-                        <LinearLayout
-                            android:layout_width="0dp"
-                            android:layout_height="wrap_content"
-                            android:layout_marginStart="12dp"
-                            android:layout_weight="1"
-                            android:orientation="vertical">
-
-                            <TextView
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:text="Salário"
-                                android:textColor="@color/pf_text_primary"
-                                android:textSize="14sp"
-                                android:textStyle="bold" />
-
-                            <TextView
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:layout_marginTop="4dp"
-                                android:text="Receita · 05 out."
-                                android:textColor="@color/pf_text_secondary"
-                                android:textSize="12sp" />
-                        </LinearLayout>
-
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="+ R$ 3.200,00"
-                            android:textColor="@color/pf_lime"
-                            android:textSize="12sp"
-                            android:textStyle="bold" />
-                    </LinearLayout>
-
-                    <View
-                        android:layout_width="match_parent"
-                        android:layout_height="1dp"
-                        android:background="@color/pf_divider" />
-
-                    <!-- SUPERMERCADO -->
                     <LinearLayout
+                        android:id="@+id/containerMovimentacoesRecentes"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:gravity="center_vertical"
-                        android:orientation="horizontal"
-                        android:paddingVertical="16dp">
-
-                        <TextView
-                            android:layout_width="42dp"
-                            android:layout_height="42dp"
-                            android:background="@color/pf_surface"
-                            android:gravity="center"
-                            android:text="↘"
-                            android:textColor="@color/pf_expense"
-                            android:textSize="20sp" />
-
-                        <LinearLayout
-                            android:layout_width="0dp"
-                            android:layout_height="wrap_content"
-                            android:layout_marginStart="12dp"
-                            android:layout_weight="1"
-                            android:orientation="vertical">
-
-                            <TextView
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:text="Supermercado"
-                                android:textColor="@color/pf_text_primary"
-                                android:textSize="14sp"
-                                android:textStyle="bold" />
-
-                            <TextView
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:layout_marginTop="4dp"
-                                android:text="Despesa · 08 out."
-                                android:textColor="@color/pf_text_secondary"
-                                android:textSize="12sp" />
-                        </LinearLayout>
-
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="- R$ 450,00"
-                            android:textColor="@color/pf_expense"
-                            android:textSize="12sp"
-                            android:textStyle="bold" />
-                    </LinearLayout>
-
-                    <View
-                        android:layout_width="match_parent"
-                        android:layout_height="1dp"
-                        android:background="@color/pf_divider" />
-
-                    <!-- INTERNET -->
-                    <LinearLayout
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:gravity="center_vertical"
-                        android:orientation="horizontal"
-                        android:paddingVertical="16dp">
-
-                        <TextView
-                            android:layout_width="42dp"
-                            android:layout_height="42dp"
-                            android:background="@color/pf_surface"
-                            android:gravity="center"
-                            android:text="↘"
-                            android:textColor="@color/pf_expense"
-                            android:textSize="20sp" />
-
-                        <LinearLayout
-                            android:layout_width="0dp"
-                            android:layout_height="wrap_content"
-                            android:layout_marginStart="12dp"
-                            android:layout_weight="1"
-                            android:orientation="vertical">
-
-                            <TextView
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:text="Internet"
-                                android:textColor="@color/pf_text_primary"
-                                android:textSize="14sp"
-                                android:textStyle="bold" />
-
-                            <TextView
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:layout_marginTop="4dp"
-                                android:text="Despesa · 10 out."
-                                android:textColor="@color/pf_text_secondary"
-                                android:textSize="12sp" />
-                        </LinearLayout>
-
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="- R$ 100,00"
-                            android:textColor="@color/pf_expense"
-                            android:textSize="12sp"
-                            android:textStyle="bold" />
-                    </LinearLayout>
+                        android:orientation="vertical" />
                 </LinearLayout>
 
                 <View
@@ -448,9 +316,9 @@
                     android:id="@+id/btnNovaConta"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
+                    android:layout_marginTop="20dp"
                     app:backgroundTint="@color/pf_lime"
                     android:textColor="@color/pf_background"
-                    android:layout_marginTop="20dp"
                     android:text="+ Nova conta"
                     android:textAllCaps="false" />
 
@@ -630,7 +498,7 @@
             </LinearLayout>
         </ScrollView>
 
-        <!-- TELA DE CADASTRO -->
+        <!-- TELA DE CADASTRO DE CONTA -->
         <ScrollView
             android:id="@+id/registerBillScreen"
             android:layout_width="match_parent"
@@ -761,9 +629,9 @@
                         android:id="@+id/btnSalvarConta"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
+                        android:layout_marginTop="24dp"
                         app:backgroundTint="@color/pf_lime"
                         android:textColor="@color/pf_background"
-                        android:layout_marginTop="24dp"
                         android:text="Salvar conta"
                         android:textAllCaps="false" />
 
@@ -771,9 +639,9 @@
                         android:id="@+id/btnCancelarCadastroConta"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
+                        android:layout_marginTop="8dp"
                         app:backgroundTint="@color/pf_lime"
                         android:textColor="@color/pf_background"
-                        android:layout_marginTop="8dp"
                         android:text="Cancelar"
                         android:textAllCaps="false" />
                 </LinearLayout>
@@ -783,6 +651,216 @@
                     android:layout_height="16dp" />
             </LinearLayout>
         </ScrollView>
+
+        <!-- TELA DE CADASTRO DE MOVIMENTAÇÃO -->
+        <ScrollView
+            android:id="@+id/registerMovementScreen"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:visibility="gone"
+            android:fillViewport="true"
+            android:clipToPadding="false"
+            android:paddingBottom="20dp"
+            android:scrollbars="none">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:paddingStart="22dp"
+                android:paddingTop="24dp"
+                android:paddingEnd="22dp">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="PLANEJADOR FINANCEIRO"
+                    android:textColor="@color/pf_lime"
+                    android:textSize="11sp"
+                    android:textStyle="bold"
+                    android:letterSpacing="0.12" />
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="12dp"
+                    android:text="Nova movimentação"
+                    android:textColor="@color/pf_text_primary"
+                    android:textSize="30sp"
+                    android:textStyle="bold" />
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
+                    android:text="Registre suas receitas e despesas para manter seu saldo atualizado."
+                    android:textColor="@color/pf_text_secondary"
+                    android:textSize="14sp"
+                    android:lineSpacingExtra="3dp" />
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="24dp"
+                    android:background="@drawable/pf_bg_glass_card"
+                    android:orientation="vertical"
+                    android:padding="18dp">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Descrição"
+                        android:textColor="@color/pf_text_primary"
+                        android:textStyle="bold"
+                        android:textSize="14sp" />
+
+                    <EditText
+                        android:id="@+id/etDescricaoMovimentacao"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="8dp"
+                        android:hint="Ex.: Salário, mercado..."
+                        android:inputType="textCapSentences"
+                        android:maxLines="1"
+                        android:padding="14dp"
+                        android:textColor="@color/pf_text_primary"
+                        android:textColorHint="@color/pf_text_secondary"
+                        android:background="@drawable/pf_bg_glass_card" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="20dp"
+                        android:text="Valor (R$)"
+                        android:textColor="@color/pf_text_primary"
+                        android:textStyle="bold"
+                        android:textSize="14sp" />
+
+                    <EditText
+                        android:id="@+id/etValorMovimentacao"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="8dp"
+                        android:hint="0,00"
+                        android:inputType="numberDecimal"
+                        android:maxLines="1"
+                        android:padding="14dp"
+                        android:textColor="@color/pf_text_primary"
+                        android:textColorHint="@color/pf_text_secondary"
+                        android:background="@drawable/pf_bg_glass_card" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="20dp"
+                        android:text="Tipo de movimentação"
+                        android:textColor="@color/pf_text_primary"
+                        android:textStyle="bold"
+                        android:textSize="14sp" />
+
+                    <RadioGroup
+                        android:id="@+id/rgTipoMovimentacao"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="8dp"
+                        android:orientation="horizontal">
+
+                        <RadioButton
+                            android:id="@+id/rbReceita"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:checked="true"
+                            android:buttonTint="@color/pf_lime"
+                            android:text="Receita"
+                            android:textColor="@color/pf_text_primary" />
+
+                        <RadioButton
+                            android:id="@+id/rbDespesa"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginStart="20dp"
+                            android:buttonTint="@color/pf_expense"
+                            android:text="Despesa"
+                            android:textColor="@color/pf_text_primary" />
+                    </RadioGroup>
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="20dp"
+                        android:text="Categoria"
+                        android:textColor="@color/pf_text_primary"
+                        android:textStyle="bold"
+                        android:textSize="14sp" />
+
+                    <Spinner
+                        android:id="@+id/spCategoriaMovimentacao"
+                        android:layout_width="match_parent"
+                        android:layout_height="52dp"
+                        android:layout_marginTop="8dp"
+                        android:background="@drawable/pf_bg_glass_card"
+                        android:paddingStart="10dp"
+                        android:paddingEnd="10dp" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="20dp"
+                        android:text="Data da movimentação"
+                        android:textColor="@color/pf_text_primary"
+                        android:textStyle="bold"
+                        android:textSize="14sp" />
+
+                    <TextView
+                        android:id="@+id/tvDataMovimentacaoCadastro"
+                        android:layout_width="match_parent"
+                        android:layout_height="52dp"
+                        android:layout_marginTop="8dp"
+                        android:background="@drawable/pf_bg_glass_card"
+                        android:clickable="true"
+                        android:focusable="true"
+                        android:gravity="center_vertical"
+                        android:paddingHorizontal="14dp"
+                        android:text="Selecionar data"
+                        android:textColor="@color/pf_text_primary"
+                        android:textSize="14sp" />
+
+                    <TextView
+                        android:id="@+id/tvErroMovimentacao"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="12dp"
+                        android:textColor="@color/pf_expense"
+                        android:textSize="13sp"
+                        android:visibility="gone" />
+
+                    <Button
+                        android:id="@+id/btnSalvarMovimentacao"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="24dp"
+                        app:backgroundTint="@color/pf_lime"
+                        android:textColor="@color/pf_background"
+                        android:text="Salvar movimentação"
+                        android:textAllCaps="false" />
+
+                    <Button
+                        android:id="@+id/btnCancelarMovimentacao"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="8dp"
+                        app:backgroundTint="@color/pf_lime"
+                        android:textColor="@color/pf_background"
+                        android:text="Cancelar"
+                        android:textAllCaps="false" />
+                </LinearLayout>
+
+                <View
+                    android:layout_width="match_parent"
+                    android:layout_height="16dp" />
+            </LinearLayout>
+        </ScrollView>
+
     </FrameLayout>
 
     <!-- NAVEGAÇÃO INFERIOR -->
@@ -856,4 +934,5 @@
                 android:textSize="12sp" />
         </LinearLayout>
     </LinearLayout>
+
 </androidx.constraintlayout.widget.ConstraintLayout>
