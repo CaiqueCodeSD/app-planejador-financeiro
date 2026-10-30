@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_marginBottom="12dp"
+    android:orientation="horizontal"
+    android:gravity="center_vertical"
+    android:background="@drawable/pf_bg_glass_card"
+    android:padding="16dp">
+
+    <!-- Informações da movimentação -->
+    <LinearLayout
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_weight="1"
+        android:orientation="vertical">
+
+        <TextView
+            android:id="@+id/tvDescricaoHistorico"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Descrição da movimentação"
+            android:textColor="@color/white"
+            android:textSize="15sp"
+            android:textStyle="bold"
+            android:maxLines="2"
+            android:ellipsize="end" />
+
+        <TextView
+            android:id="@+id/tvCategoriaHistorico"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="5dp"
+            android:text="Categoria"
+            android:textColor="@color/pf_text_secondary"
+            android:textSize="12sp"
+            android:maxLines="1"
+            android:ellipsize="end" />
+
+        <TextView
+            android:id="@+id/tvDataHistorico"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="5dp"
+            android:text="29/10/2026"
+            android:textColor="@color/pf_text_secondary"
+            android:textSize="11sp" />
+
+    </LinearLayout>
+
+    <!-- Valor da movimentação -->
+    <TextView
+        android:id="@+id/tvValorHistorico"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="10dp"
+        android:layout_marginEnd="8dp"
+        android:text="R$ 250,00"
+        android:textColor="@color/pf_green"
+        android:textSize="14sp"
+        android:textStyle="bold"
+        android:maxLines="1" />
+
+    <!-- Botão de exclusão -->
+    <TextView
+        android:id="@+id/btnExcluirMovimentacao"
+        android:layout_width="36dp"
+        android:layout_height="36dp"
+        android:gravity="center"
+        android:text="×"
+        android:textColor="@color/pf_text_secondary"
+        android:textSize="24sp"
+        android:background="?attr/selectableItemBackgroundBorderless"
+        android:clickable="true"
+        android:focusable="true"
+        android:contentDescription="Excluir movimentação" />
+
+</LinearLayout>

@@ -260,6 +260,22 @@
                         android:orientation="vertical" />
                 </LinearLayout>
 
+
+                <TextView
+                    android:id="@+id/btnVerHistorico"
+                    android:layout_width="match_parent"
+                    android:layout_height="48dp"
+                    android:layout_marginTop="12dp"
+                    android:gravity="center"
+                    android:text="Visualizar histórico  →"
+                    android:textColor="@color/pf_lime"
+                    android:textSize="14sp"
+                    android:textStyle="bold"
+                    android:background="@drawable/pf_bg_glass_card"
+                    android:clickable="true"
+                    android:focusable="true" />
+
+
                 <View
                     android:layout_width="match_parent"
                     android:layout_height="12dp" />
