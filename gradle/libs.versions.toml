@@ -12,8 +12,10 @@ room = "2.8.4"
 ksp = "2.3.10"
 lifecycle = "2.10.0"
 koin = "4.2.2"
+recyclerview = "1.4.0"
 
 [libraries]
+androidx-recyclerview = { group = "androidx.recyclerview", name = "recyclerview", version.ref = "recyclerview" }
 koin-android = { group = "io.insert-koin", name = "koin-android", version.ref = "koin" }
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
 junit = { group = "junit", name = "junit", version.ref = "junit" }

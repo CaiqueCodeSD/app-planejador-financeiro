@@ -37,6 +37,8 @@ import java.util.Date
 import java.util.Locale
 import kotlinx.coroutines.launch
 import org.koin.androidx.viewmodel.ext.android.viewModel
+import android.content.Intent
+import com.example.planejadorfinanceiro.presentation.movimentacao.HistoricoMovimentacoesActivity
 
 class MainActivity : AppCompatActivity() {
 
@@ -701,6 +703,16 @@ class MainActivity : AppCompatActivity() {
             mostrarTela(R.id.dashboardScreen)
             atualizarNavegacao(isHome = true)
         }
+
+        findViewById<View>(R.id.btnVerHistorico).setOnClickListener {
+            startActivity(
+                Intent(
+                    this,
+                    HistoricoMovimentacoesActivity::class.java
+                )
+            )
+        }
+
     }
 
     private fun abrirCadastroMovimentacao() {
