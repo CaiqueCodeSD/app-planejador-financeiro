@@ -1,3 +1,4 @@
+
 package com.example.planejadorfinanceiro.presentation.movimentacao
 
 import android.view.LayoutInflater
@@ -16,7 +17,7 @@ import java.util.Date
 import java.util.Locale
 
 class MovimentacaoAdapter(
-    private val onItemClick: (Movimentacao) -> Unit,
+    private val onEditClick: (Movimentacao) -> Unit,
     private val onDeleteClick: (Movimentacao) -> Unit
 ) : ListAdapter<Movimentacao, MovimentacaoAdapter.MovimentacaoViewHolder>(
     DiffCallback
@@ -59,6 +60,9 @@ class MovimentacaoAdapter(
         private val valor: TextView =
             itemView.findViewById(R.id.tvValorHistorico)
 
+        private val botaoEditar: View =
+            itemView.findViewById(R.id.btnEditarMovimentacao)
+
         private val botaoExcluir: View =
             itemView.findViewById(R.id.btnExcluirMovimentacao)
 
@@ -75,7 +79,7 @@ class MovimentacaoAdapter(
                 Locale("pt", "BR")
             )
 
-            valor.text = formatoMoeda.format(
+            val valorFormatado = formatoMoeda.format(
                 movimentacao.valorCentavos / 100.0
             )
 
@@ -87,10 +91,10 @@ class MovimentacaoAdapter(
                 "- "
             }
 
-            valor.text = prefixo + valor.text
+            valor.text = prefixo + valorFormatado
 
-            itemView.setOnClickListener {
-                onItemClick(movimentacao)
+            botaoEditar.setOnClickListener {
+                onEditClick(movimentacao)
             }
 
             botaoExcluir.setOnClickListener {

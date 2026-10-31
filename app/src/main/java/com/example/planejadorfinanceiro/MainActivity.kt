@@ -1,6 +1,7 @@
-
 package com.example.planejadorfinanceiro
 
+import androidx.activity.result.contract.ActivityResultContracts
+import java.math.BigDecimal
 import android.app.DatePickerDialog
 import android.content.res.ColorStateList
 import android.os.Bundle
@@ -39,6 +40,10 @@ import kotlinx.coroutines.launch
 import org.koin.androidx.viewmodel.ext.android.viewModel
 import android.content.Intent
 import com.example.planejadorfinanceiro.presentation.movimentacao.HistoricoMovimentacoesActivity
+import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.repeatOnLifecycle
+import kotlinx.coroutines.launch
+import android.widget.ImageButton
 
 class MainActivity : AppCompatActivity() {
 
@@ -50,6 +55,25 @@ class MainActivity : AppCompatActivity() {
     private var listaVaziaView: TextView? = null
     private var vencimentoSelecionadoMillis: Long? = null
     private var movimentacaoSelecionadaMillis: Long? = null
+
+    private var movimentacaoEmEdicaoId: Long? = null
+
+    private val historicoLauncher =
+        registerForActivityResult(
+            ActivityResultContracts.StartActivityForResult()
+        ) { resultado ->
+
+            if (resultado.resultCode == RESULT_OK) {
+                val id = resultado.data?.getLongExtra(
+                    HistoricoMovimentacoesActivity.EXTRA_MOVIMENTACAO_ID,
+                    -1L
+                ) ?: -1L
+
+                if (id > 0L) {
+                    carregarMovimentacaoParaEdicao(id)
+                }
+            }
+        }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -78,6 +102,7 @@ class MainActivity : AppCompatActivity() {
         configurarFormularioMovimentacao()
         observarEstadoMovimentacao()
         configurarBotaoVoltar()
+        observarEstadoExclusao()
     }
 
     // --------------------------------------------------
@@ -491,6 +516,20 @@ class MainActivity : AppCompatActivity() {
                 }
             }
 
+
+            item.findViewById<ImageButton>(R.id.btnExcluirConta).apply {
+                visibility = if (conta.situacao == SituacaoConta.PENDENTE) {
+                    View.VISIBLE
+                } else {
+                    View.GONE
+                }
+
+                setOnClickListener {
+                    confirmarExclusaoConta(conta)
+                }
+            }
+
+
             container.addView(item)
 
             if (index < contas.lastIndex) {
@@ -705,7 +744,7 @@ class MainActivity : AppCompatActivity() {
         }
 
         findViewById<View>(R.id.btnVerHistorico).setOnClickListener {
-            startActivity(
+            historicoLauncher.launch(
                 Intent(
                     this,
                     HistoricoMovimentacoesActivity::class.java
@@ -713,6 +752,71 @@ class MainActivity : AppCompatActivity() {
             )
         }
 
+    }
+
+    private fun carregarMovimentacaoParaEdicao(id: Long) {
+        lifecycleScope.launch {
+            val movimentacao =
+                movimentacaoViewModel.buscarMovimentacaoPorId(id)
+
+            if (movimentacao == null) {
+                Toast.makeText(
+                    this@MainActivity,
+                    "Movimentação não encontrada.",
+                    Toast.LENGTH_SHORT
+                ).show()
+                return@launch
+            }
+
+            movimentacaoEmEdicaoId = movimentacao.id
+
+            findViewById<EditText>(R.id.etDescricaoMovimentacao)
+                .setText(movimentacao.descricao)
+
+            findViewById<EditText>(R.id.etValorMovimentacao)
+                .setText(
+                    BigDecimal.valueOf(
+                        movimentacao.valorCentavos,
+                        2
+                    ).toPlainString()
+                )
+
+            findViewById<RadioGroup>(R.id.rgTipoMovimentacao).check(
+                if (movimentacao.tipo == TipoMovimentacao.RECEITA) {
+                    R.id.rbReceita
+                } else {
+                    R.id.rbDespesa
+                }
+            )
+
+            val spinner = findViewById<Spinner>(
+                R.id.spCategoriaMovimentacao
+            )
+
+            val posicaoCategoria = (0 until spinner.count).firstOrNull {
+                spinner.getItemAtPosition(it).toString() == movimentacao.categoria
+            } ?: 0
+
+            spinner.setSelection(posicaoCategoria)
+
+            spinner.setSelection(
+                if (posicaoCategoria >= 0) posicaoCategoria else 0
+            )
+
+            movimentacaoSelecionadaMillis = movimentacao.dataMillis
+            atualizarDataMovimentacao()
+
+            findViewById<TextView>(R.id.tvErroMovimentacao).apply {
+                text = ""
+                visibility = View.GONE
+            }
+
+            findViewById<Button>(R.id.btnSalvarMovimentacao).text =
+                "Atualizar movimentação"
+
+            mostrarTela(R.id.registerMovementScreen)
+            atualizarNavegacao(isHome = true)
+        }
     }
 
     private fun abrirCadastroMovimentacao() {
@@ -818,30 +922,88 @@ class MainActivity : AppCompatActivity() {
             valorEmReais = valor,
             tipo = tipo,
             dataMillis = data,
-            categoria = categoria
+            categoria = categoria,
+            movimentacaoId = movimentacaoEmEdicaoId
         )
     }
+
+
+    private fun confirmarExclusaoConta(conta: Conta) {
+        AlertDialog.Builder(this)
+            .setTitle("Excluir conta?")
+            .setMessage(
+                "Deseja realmente excluir a conta \"${conta.descricao}\"?"
+            )
+            .setNegativeButton("Cancelar", null)
+            .setPositiveButton("Excluir") { _, _ ->
+                contaViewModel.excluirConta(conta.id)
+            }
+            .show()
+    }
+
+
+    private fun observarEstadoExclusao() {
+        lifecycleScope.launch {
+            repeatOnLifecycle(Lifecycle.State.STARTED) {
+                contaViewModel.exclusaoUiState.collect { estado ->
+
+                    if (estado.mensagemSucesso != null) {
+                        Toast.makeText(
+                            this@MainActivity,
+                            estado.mensagemSucesso,
+                            Toast.LENGTH_SHORT
+                        ).show()
+
+                        contaViewModel.limparFeedbackExclusao()
+                    }
+
+                    if (estado.mensagemErro != null) {
+                        Toast.makeText(
+                            this@MainActivity,
+                            estado.mensagemErro,
+                            Toast.LENGTH_LONG
+                        ).show()
+
+                        contaViewModel.limparFeedbackExclusao()
+                    }
+                }
+            }
+        }
+    }
+
+
 
     private fun observarEstadoMovimentacao() {
         lifecycleScope.launch {
             repeatOnLifecycle(Lifecycle.State.STARTED) {
                 movimentacaoViewModel.uiState.collect { estado ->
+
                     findViewById<Button>(R.id.btnSalvarMovimentacao).apply {
                         isEnabled = !estado.salvando
-                        text = if (estado.salvando) {
-                            "Salvando..."
-                        } else {
-                            "Salvar movimentação"
+
+                        text = when {
+                            estado.salvando && movimentacaoEmEdicaoId != null ->
+                                "Atualizando..."
+
+                            estado.salvando ->
+                                "Salvando..."
+
+                            movimentacaoEmEdicaoId != null ->
+                                "Atualizar movimentação"
+
+                            else ->
+                                "Salvar movimentação"
                         }
                     }
 
                     findViewById<TextView>(R.id.tvErroMovimentacao).apply {
-                        if (estado.mensagemErro != null) {
-                            text = estado.mensagemErro
-                            visibility = View.VISIBLE
-                        } else {
-                            visibility = View.GONE
-                        }
+                        text = estado.mensagemErro.orEmpty()
+                        visibility =
+                            if (estado.mensagemErro != null) {
+                                View.VISIBLE
+                            } else {
+                                View.GONE
+                            }
                     }
 
                     if (estado.operacaoConcluida) {
@@ -872,15 +1034,28 @@ class MainActivity : AppCompatActivity() {
         findViewById<EditText>(R.id.etDescricaoMovimentacao).text.clear()
         findViewById<EditText>(R.id.etValorMovimentacao).text.clear()
 
-        findViewById<RadioGroup>(R.id.rgTipoMovimentacao).check(R.id.rbReceita)
-        findViewById<Spinner>(R.id.spCategoriaMovimentacao).setSelection(0)
+        findViewById<RadioGroup>(R.id.rgTipoMovimentacao)
+            .check(R.id.rbReceita)
+
+        findViewById<Spinner>(R.id.spCategoriaMovimentacao)
+            .setSelection(0)
 
         findViewById<TextView>(R.id.tvErroMovimentacao).apply {
             text = ""
             visibility = View.GONE
         }
 
+        movimentacaoEmEdicaoId = null
         movimentacaoSelecionadaMillis = null
+
+        findViewById<TextView>(R.id.tvDataMovimentacaoCadastro).text =
+            "Selecionar data"
+
+        findViewById<Button>(R.id.btnSalvarMovimentacao).apply {
+            text = "Salvar movimentação"
+            isEnabled = true
+        }
+
         movimentacaoViewModel.limparFeedback()
     }
 
