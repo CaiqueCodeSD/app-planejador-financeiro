@@ -16,6 +16,12 @@ data class CadastroContaUiState(
     val cadastroConcluido: Boolean = false
 )
 
+data class ExclusaoContaUiState(
+    val excluindo: Boolean = false,
+    val mensagemSucesso: String? = null,
+    val mensagemErro: String? = null
+)
+
 class ContaViewModel(
     private val repository: ContaRepository
 ) : ViewModel() {
@@ -30,6 +36,9 @@ class ContaViewModel(
     private val _uiState = MutableStateFlow(CadastroContaUiState())
     val uiState = _uiState.asStateFlow()
 
+    private val _exclusaoUiState = MutableStateFlow(ExclusaoContaUiState())
+    val exclusaoUiState = _exclusaoUiState.asStateFlow()
+
     fun salvarConta(
         descricao: String,
         valorEmReais: String,
@@ -37,9 +46,7 @@ class ContaViewModel(
         contaId: Long? = null
     ) {
         val descricaoValidada = descricao.trim()
-        val valor = valorEmReais.trim()
-            .replace(",", ".")
-            .toBigDecimalOrNull()
+        val valor = valorEmReais.trim().replace(",", ".").toBigDecimalOrNull()
 
         if (descricaoValidada.isBlank()) {
             atualizarErro("Informe a descrição da conta.")
@@ -80,10 +87,8 @@ class ContaViewModel(
                 }
 
                 repository.salvar(conta)
+                _uiState.value = CadastroContaUiState(cadastroConcluido = true)
 
-                _uiState.value = CadastroContaUiState(
-                    cadastroConcluido = true
-                )
             } catch (_: Exception) {
                 _uiState.value = CadastroContaUiState(
                     mensagemErro = if (contaId == null) {
@@ -101,9 +106,31 @@ class ContaViewModel(
             try {
                 repository.marcarComoPaga(id)
             } catch (_: Exception) {
-                // O tratamento de erro visual será aprimorado em etapa própria.
+                // O tratamento visual será aprimorado em etapa própria.
             }
         }
+    }
+
+    fun excluirConta(id: Long) {
+        viewModelScope.launch {
+            _exclusaoUiState.value = ExclusaoContaUiState(excluindo = true)
+
+            try {
+                repository.excluir(id)
+
+                _exclusaoUiState.value = ExclusaoContaUiState(
+                    mensagemSucesso = "Conta excluída com sucesso!"
+                )
+            } catch (_: Exception) {
+                _exclusaoUiState.value = ExclusaoContaUiState(
+                    mensagemErro = "Não foi possível excluir a conta."
+                )
+            }
+        }
+    }
+
+    fun limparFeedbackExclusao() {
+        _exclusaoUiState.value = ExclusaoContaUiState()
     }
 
     fun limparFeedback() {

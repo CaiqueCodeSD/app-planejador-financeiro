@@ -36,6 +36,10 @@ class MovimentacaoViewModel(
     private val _uiState = MutableStateFlow(MovimentacaoUiState())
     val uiState = _uiState.asStateFlow()
 
+    suspend fun buscarMovimentacaoPorId(id: Long): Movimentacao? {
+        return repository.buscarPorId(id)
+    }
+
     fun salvarMovimentacao(
         descricao: String,
         valorEmReais: String,

@@ -47,6 +47,21 @@
             android:textColor="@color/pf_text_secondary"
             android:textSize="11sp" />
 
+        <!-- Botão de edição -->
+        <Button
+            android:id="@+id/btnEditarMovimentacao"
+            android:layout_width="wrap_content"
+            android:layout_height="40dp"
+            android:layout_marginTop="8dp"
+            android:backgroundTint="@color/pf_blue_light"
+            android:minWidth="0dp"
+            android:minHeight="0dp"
+            android:paddingHorizontal="12dp"
+            android:text="Editar"
+            android:textAllCaps="false"
+            android:textColor="@color/pf_background"
+            android:textSize="11sp" />
+
     </LinearLayout>
 
     <!-- Valor da movimentação -->
@@ -63,17 +78,18 @@
         android:maxLines="1" />
 
     <!-- Botão de exclusão -->
-    <TextView
+    <ImageButton
         android:id="@+id/btnExcluirMovimentacao"
-        android:layout_width="36dp"
-        android:layout_height="36dp"
-        android:gravity="center"
-        android:text="×"
-        android:textColor="@color/pf_text_secondary"
-        android:textSize="24sp"
-        android:background="?attr/selectableItemBackgroundBorderless"
+        android:layout_width="40dp"
+        android:layout_height="40dp"
+        android:layout_marginStart="4dp"
+        android:background="@drawable/pf_bg_delete_button"
+        android:src="@drawable/ic_delete"
+        android:scaleType="center"
+        android:padding="10dp"
+        android:tint="@color/white"
+        android:contentDescription="Excluir movimentação"
         android:clickable="true"
-        android:focusable="true"
-        android:contentDescription="Excluir movimentação" />
+        android:focusable="true" />
 
 </LinearLayout>

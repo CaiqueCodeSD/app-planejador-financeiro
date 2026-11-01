@@ -1,6 +1,7 @@
-
 package com.example.planejadorfinanceiro.presentation.movimentacao
 
+import android.app.Activity
+import android.content.Intent
 import android.os.Bundle
 import android.view.View
 import android.widget.TextView
@@ -29,16 +30,18 @@ class HistoricoMovimentacoesActivity : AppCompatActivity() {
         configurarLista()
         configurarBotaoVoltar()
         observarMovimentacoes()
+        observarEstadoOperacoes()
     }
 
     private fun configurarLista() {
         adapter = MovimentacaoAdapter(
-            onItemClick = { movimentacao ->
-                Toast.makeText(
-                    this,
-                    "Edição será integrada na próxima etapa.",
-                    Toast.LENGTH_SHORT
-                ).show()
+            onEditClick = { movimentacao ->
+                val resultado = Intent().apply {
+                    putExtra(EXTRA_MOVIMENTACAO_ID, movimentacao.id)
+                }
+
+                setResult(RESULT_OK, resultado)
+                finish()
             },
             onDeleteClick = { movimentacao ->
                 confirmarExclusao(movimentacao.id)
@@ -55,15 +58,46 @@ class HistoricoMovimentacoesActivity : AppCompatActivity() {
         lifecycleScope.launch {
             repeatOnLifecycle(Lifecycle.State.STARTED) {
                 movimentacaoViewModel.movimentacoes.collect { movimentacoes ->
-
                     adapter.submitList(movimentacoes)
 
-                    findViewById<TextView>(
-                        R.id.tvHistoricoVazio
-                    ).visibility = if (movimentacoes.isEmpty()) {
-                        View.VISIBLE
-                    } else {
-                        View.GONE
+                    findViewById<TextView>(R.id.tvHistoricoVazio).visibility =
+                        if (movimentacoes.isEmpty()) {
+                            View.VISIBLE
+                        } else {
+                            View.GONE
+                        }
+                }
+            }
+        }
+    }
+
+    private fun observarEstadoOperacoes() {
+        lifecycleScope.launch {
+            repeatOnLifecycle(Lifecycle.State.STARTED) {
+                movimentacaoViewModel.uiState.collect { estado ->
+
+                    when {
+                        estado.operacaoConcluida -> {
+                            estado.mensagemSucesso?.let { mensagem ->
+                                Toast.makeText(
+                                    this@HistoricoMovimentacoesActivity,
+                                    mensagem,
+                                    Toast.LENGTH_SHORT
+                                ).show()
+                            }
+
+                            movimentacaoViewModel.limparFeedback()
+                        }
+
+                        estado.mensagemErro != null -> {
+                            Toast.makeText(
+                                this@HistoricoMovimentacoesActivity,
+                                estado.mensagemErro,
+                                Toast.LENGTH_LONG
+                            ).show()
+
+                            movimentacaoViewModel.limparFeedback()
+                        }
                     }
                 }
             }
@@ -79,12 +113,6 @@ class HistoricoMovimentacoesActivity : AppCompatActivity() {
             .setNegativeButton("Cancelar", null)
             .setPositiveButton("Excluir") { _, _ ->
                 movimentacaoViewModel.excluirMovimentacao(id)
-
-                Toast.makeText(
-                    this,
-                    "Solicitação de exclusão realizada.",
-                    Toast.LENGTH_SHORT
-                ).show()
             }
             .show()
     }
@@ -93,5 +121,9 @@ class HistoricoMovimentacoesActivity : AppCompatActivity() {
         findViewById<View>(R.id.btnVoltarHistorico).setOnClickListener {
             finish()
         }
+    }
+
+    companion object {
+        const val EXTRA_MOVIMENTACAO_ID = "extra_movimentacao_id"
     }
 }
