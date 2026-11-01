@@ -122,6 +122,14 @@ class MainActivity : AppCompatActivity() {
             atualizarNavegacao(isHome = false)
         }
 
+        findViewById<ImageButton>(R.id.btnMesAnterior).setOnClickListener {
+            dashboardViewModel.mesAnterior()
+        }
+
+        findViewById<ImageButton>(R.id.btnProximoMes).setOnClickListener {
+            dashboardViewModel.proximoMes()
+        }
+
         mostrarTela(R.id.dashboardScreen)
         atualizarNavegacao(isHome = true)
     }
@@ -587,10 +595,15 @@ class MainActivity : AppCompatActivity() {
     // DASHBOARD
     // --------------------------------------------------
 
+
     private fun observarDashboard() {
         lifecycleScope.launch {
             repeatOnLifecycle(Lifecycle.State.STARTED) {
                 dashboardViewModel.uiState.collect { estado ->
+
+                    findViewById<TextView>(R.id.tvMesSelecionado).text =
+                        estado.tituloPeriodo
+
                     findViewById<TextView>(R.id.tvSaldo).text =
                         formatarMoeda(estado.saldoCentavos)
 
@@ -607,6 +620,7 @@ class MainActivity : AppCompatActivity() {
             }
         }
     }
+
 
     private fun atualizarMovimentacoesRecentes(
         movimentacoes: List<Movimentacao>

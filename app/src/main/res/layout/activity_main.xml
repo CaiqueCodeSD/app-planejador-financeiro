@@ -56,18 +56,51 @@
                     android:textStyle="bold"
                     android:lineSpacingExtra="2dp" />
 
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="20dp"
-                    android:paddingVertical="9dp"
-                    android:paddingHorizontal="14dp"
-                    android:background="@drawable/pf_bg_glass_card"
-                    android:text="Outubro 2026  ▾"
-                    android:textColor="@color/pf_text_primary"
-                    android:textSize="13sp" />
 
                 <!-- SALDO -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="20dp"
+                    android:background="@drawable/pf_bg_glass_card"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal"
+                    android:paddingHorizontal="6dp"
+                    android:paddingVertical="4dp">
+
+                    <ImageButton
+                        android:id="@+id/btnMesAnterior"
+                        android:layout_width="40dp"
+                        android:layout_height="36dp"
+                        android:background="?attr/selectableItemBackgroundBorderless"
+                        android:contentDescription="Mês anterior"
+                        android:src="@drawable/ic_chevron_left"
+                        android:padding="9dp"
+                        app:tint="@color/pf_text_primary" />
+
+                    <TextView
+                        android:id="@+id/tvMesSelecionado"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:gravity="center"
+                        android:text="Outubro 2026"
+                        android:textColor="@color/pf_text_primary"
+                        android:textSize="13sp"
+                        android:textStyle="bold" />
+
+                    <ImageButton
+                        android:id="@+id/btnProximoMes"
+                        android:layout_width="40dp"
+                        android:layout_height="36dp"
+                        android:background="?attr/selectableItemBackgroundBorderless"
+                        android:contentDescription="Próximo mês"
+                        android:src="@drawable/ic_chevron_right"
+                        android:padding="9dp"
+                        app:tint="@color/pf_text_primary" />
+
+                </LinearLayout>
+
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
