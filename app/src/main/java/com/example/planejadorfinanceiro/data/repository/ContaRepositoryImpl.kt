@@ -93,21 +93,13 @@ class ContaRepositoryImpl(
     override suspend fun marcarComoSincronizada(
         uuid: String,
         atualizadaEmMillis: Long
-    ) {
-        contaDao.marcarComoSincronizada(uuid, atualizadaEmMillis)
-    }
+    ): Boolean {
+        val linhasAtualizadas = contaDao.marcarComoSincronizada(
+            uuid,
+            atualizadaEmMillis
+        )
 
-    override suspend fun buscarExclusoesPendentes(): List<ExclusaoPendente> {
-        return contaDao.buscarExclusoesPendentes().map { exclusao ->
-            ExclusaoPendente(
-                uuid = exclusao.uuid,
-                excluidaEmMillis = exclusao.excluidaEmMillis
-            )
-        }
-    }
-
-    override suspend fun confirmarExclusaoSincronizada(uuid: String) {
-        contaDao.removerExclusaoPendente(uuid)
+        return linhasAtualizadas > 0
     }
 
 }

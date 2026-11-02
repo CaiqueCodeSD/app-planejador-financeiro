@@ -15,6 +15,10 @@ koin = "4.2.2"
 recyclerview = "1.4.0"
 
 [libraries]
+room-runtime = { group = "androidx.room", name = "room-runtime", version.ref = "room" }
+room-ktx = { group = "androidx.room", name = "room-ktx", version.ref = "room" }
+room-compiler = { group = "androidx.room", name = "room-compiler", version.ref = "room" }
+room-testing = { group = "androidx.room", name = "room-testing", version.ref = "room" }
 androidx-recyclerview = { group = "androidx.recyclerview", name = "recyclerview", version.ref = "recyclerview" }
 koin-android = { group = "io.insert-koin", name = "koin-android", version.ref = "koin" }
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
@@ -27,11 +31,6 @@ androidx-activity-ktx = { group = "androidx.activity", name = "activity-ktx", ve
 androidx-constraintlayout = { group = "androidx.constraintlayout", name = "constraintlayout", version.ref = "constraintlayout" }
 androidx-lifecycle-viewmodel-ktx = { group = "androidx.lifecycle", name = "lifecycle-viewmodel-ktx", version.ref = "lifecycle" }
 androidx-lifecycle-runtime-ktx = { group = "androidx.lifecycle", name = "lifecycle-runtime-ktx", version.ref = "lifecycle" }
-
-# Room
-room-runtime = { group = "androidx.room", name = "room-runtime", version = "2.8.4" }
-room-ktx = { group = "androidx.room", name = "room-ktx", version = "2.8.4" }
-room-compiler = { group = "androidx.room", name = "room-compiler", version = "2.8.4" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }

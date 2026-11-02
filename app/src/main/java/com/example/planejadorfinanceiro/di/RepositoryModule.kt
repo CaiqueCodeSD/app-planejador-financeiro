@@ -1,5 +1,7 @@
 package com.example.planejadorfinanceiro.di
 
+import com.example.planejadorfinanceiro.data.repository.ExclusaoPendenteRepositoryImpl
+import com.example.planejadorfinanceiro.domain.repository.ExclusaoPendenteRepository
 import com.example.planejadorfinanceiro.data.repository.ContaRepositoryImpl
 import com.example.planejadorfinanceiro.data.repository.MovimentacaoRepositoryImpl
 import com.example.planejadorfinanceiro.domain.repository.ContaRepository
@@ -13,5 +15,9 @@ val repositoryModule = module {
 
     single<MovimentacaoRepository> {
         MovimentacaoRepositoryImpl(get())
+    }
+
+    single<ExclusaoPendenteRepository> {
+        ExclusaoPendenteRepositoryImpl(get())
     }
 }

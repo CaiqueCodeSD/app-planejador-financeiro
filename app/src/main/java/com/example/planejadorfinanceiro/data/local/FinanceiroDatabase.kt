@@ -13,14 +13,14 @@ import androidx.sqlite.db.SupportSQLiteDatabase
         ExclusaoPendenteEntity::class,
         MovimentacaoEntity::class
     ],
-    version = 4,
-    exportSchema = false
+    version = 5,
+    exportSchema = true
 )
 abstract class FinanceiroDatabase : RoomDatabase() {
 
     abstract fun movimentacaoDao(): MovimentacaoDao
-
     abstract fun contaDao(): ContaDao
+    abstract fun exclusaoPendenteDao(): ExclusaoPendenteDao
 
     companion object {
 
@@ -104,6 +104,26 @@ abstract class FinanceiroDatabase : RoomDatabase() {
             }
         }
 
+        val MIGRATION_4_5 = object : Migration(4, 5) {
+            override fun migrate(database: SupportSQLiteDatabase) {
+
+                database.execSQL(
+                    """
+            ALTER TABLE exclusoes_pendentes
+            ADD COLUMN tipoRegistro TEXT NOT NULL DEFAULT 'LEGADO'
+            """.trimIndent()
+                )
+
+                database.execSQL(
+                    """
+            CREATE UNIQUE INDEX IF NOT EXISTS
+            index_contas_uuid
+            ON contas(uuid)
+            """.trimIndent()
+                )
+            }
+        }
+
         fun getInstance(context: Context): FinanceiroDatabase {
             return INSTANCE ?: synchronized(this) {
                 INSTANCE ?: Room.databaseBuilder(
@@ -114,7 +134,8 @@ abstract class FinanceiroDatabase : RoomDatabase() {
                     .addMigrations(
                         MIGRATION_1_2,
                         MIGRATION_2_3,
-                        MIGRATION_3_4
+                        MIGRATION_3_4,
+                        MIGRATION_4_5
                     )
                     .build()
                     .also { database ->

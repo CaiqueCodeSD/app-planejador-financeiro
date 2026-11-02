@@ -1,15 +1,14 @@
 package com.example.planejadorfinanceiro
 
-import androidx.activity.result.contract.ActivityResultContracts
-import java.math.BigDecimal
 import android.app.DatePickerDialog
-import android.content.res.ColorStateList
+import android.content.Intent
 import android.os.Bundle
 import android.util.TypedValue
 import android.view.View
 import android.widget.ArrayAdapter
 import android.widget.Button
 import android.widget.EditText
+import android.widget.ImageButton
 import android.widget.LinearLayout
 import android.widget.RadioGroup
 import android.widget.Spinner
@@ -17,6 +16,7 @@ import android.widget.TextView
 import android.widget.Toast
 import androidx.activity.OnBackPressedCallback
 import androidx.activity.enableEdgeToEdge
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.ViewCompat
@@ -30,20 +30,16 @@ import com.example.planejadorfinanceiro.domain.model.SituacaoConta
 import com.example.planejadorfinanceiro.domain.model.TipoMovimentacao
 import com.example.planejadorfinanceiro.presentation.conta.ContaViewModel
 import com.example.planejadorfinanceiro.presentation.dashboard.DashboardViewModel
+import com.example.planejadorfinanceiro.presentation.movimentacao.HistoricoMovimentacoesActivity
 import com.example.planejadorfinanceiro.presentation.movimentacao.MovimentacaoViewModel
+import kotlinx.coroutines.launch
+import org.koin.androidx.viewmodel.ext.android.viewModel
+import java.math.BigDecimal
 import java.text.NumberFormat
 import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.Date
 import java.util.Locale
-import kotlinx.coroutines.launch
-import org.koin.androidx.viewmodel.ext.android.viewModel
-import android.content.Intent
-import com.example.planejadorfinanceiro.presentation.movimentacao.HistoricoMovimentacoesActivity
-import androidx.lifecycle.lifecycleScope
-import androidx.lifecycle.repeatOnLifecycle
-import kotlinx.coroutines.launch
-import android.widget.ImageButton
 
 class MainActivity : AppCompatActivity() {
 

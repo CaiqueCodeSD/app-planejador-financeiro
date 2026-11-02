@@ -16,4 +16,9 @@ val databaseModule = module {
     single {
         get<FinanceiroDatabase>().movimentacaoDao()
     }
+
+    single {
+        get<FinanceiroDatabase>().exclusaoPendenteDao()
+    }
+
 }
