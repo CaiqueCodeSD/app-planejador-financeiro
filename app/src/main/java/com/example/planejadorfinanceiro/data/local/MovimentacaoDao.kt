@@ -8,7 +8,6 @@ import androidx.room.Update
 import androidx.room.Transaction
 import kotlinx.coroutines.flow.Flow
 
-
 @Dao
 interface MovimentacaoDao {
 
@@ -24,6 +23,13 @@ interface MovimentacaoDao {
         LIMIT 1
     """)
     suspend fun buscarPorId(id: Long): MovimentacaoEntity?
+
+    @Query("""
+        SELECT * FROM movimentacoes
+        WHERE uuid = :uuid
+        LIMIT 1
+    """)
+    suspend fun buscarPorUuid(uuid: String): MovimentacaoEntity?
 
     @Query("""
         SELECT * FROM movimentacoes
@@ -81,12 +87,11 @@ interface MovimentacaoDao {
         registrarExclusaoPendente(
             ExclusaoPendenteEntity(
                 uuid = movimentacao.uuid,
-                excluidaEmMillis = excluidaEmMillis
+                excluidaEmMillis = excluidaEmMillis,
+                tipoRegistro = "MOVIMENTACAO"
             )
         )
 
         excluir(id)
     }
-
 }
-

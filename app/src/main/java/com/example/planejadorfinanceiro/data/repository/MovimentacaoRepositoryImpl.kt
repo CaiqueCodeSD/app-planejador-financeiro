@@ -61,8 +61,13 @@ class MovimentacaoRepositoryImpl(
     override suspend fun marcarComoSincronizada(
         uuid: String,
         atualizadaEmMillis: Long
-    ) {
-        movimentacaoDao.marcarComoSincronizada(uuid, atualizadaEmMillis)
+    ): Boolean {
+        val linhasAtualizadas = movimentacaoDao.marcarComoSincronizada(
+            uuid,
+            atualizadaEmMillis
+        )
+
+        return linhasAtualizadas > 0
     }
 
     private fun MovimentacaoEntity.toDomain() = Movimentacao(

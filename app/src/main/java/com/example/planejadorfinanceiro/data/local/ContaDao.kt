@@ -17,6 +17,9 @@ interface ContaDao {
     @Query("SELECT * FROM contas WHERE id = :id LIMIT 1")
     suspend fun buscarPorId(id: Long): ContaEntity?
 
+    @Query("SELECT * FROM contas WHERE uuid = :uuid LIMIT 1")
+    suspend fun buscarPorUuid(uuid: String): ContaEntity?
+
     @Query("""
         SELECT * FROM contas
         WHERE statusSincronizacao = 'PENDENTE'
@@ -62,15 +65,6 @@ interface ContaDao {
         exclusao: ExclusaoPendenteEntity
     )
 
-    @Query("""
-    SELECT * FROM exclusoes_pendentes
-    ORDER BY excluidaEmMillis ASC
-""")
-    suspend fun buscarExclusoesPendentes(): List<ExclusaoPendenteEntity>
-
-    @Query("DELETE FROM exclusoes_pendentes WHERE uuid = :uuid")
-    suspend fun removerExclusaoPendente(uuid: String)
-
     @Transaction
     suspend fun excluirComRegistroPendente(id: Long, excluidaEmMillis: Long) {
         val conta = buscarPorId(id) ?: return
@@ -78,7 +72,8 @@ interface ContaDao {
         registrarExclusaoPendente(
             ExclusaoPendenteEntity(
                 uuid = conta.uuid,
-                excluidaEmMillis = excluidaEmMillis
+                excluidaEmMillis = excluidaEmMillis,
+                tipoRegistro = "CONTA"
             )
         )
 

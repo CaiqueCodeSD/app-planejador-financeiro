@@ -6,7 +6,13 @@ import androidx.room.PrimaryKey
 import com.example.planejadorfinanceiro.domain.model.StatusSincronizacao
 import java.util.UUID
 
-@Entity(tableName = "contas")
+@Entity(
+    tableName = "contas",
+    indices = [
+        androidx.room.Index(value = ["uuid"], unique = true)
+    ]
+)
+
 data class ContaEntity(
     @PrimaryKey(autoGenerate = true)
     val id: Long = 0,

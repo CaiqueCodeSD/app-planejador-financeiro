@@ -4,10 +4,10 @@
     <selectionStates>
       <SelectionState runConfigName="app">
         <option name="selectionMode" value="DROPDOWN" />
-        <DropdownSelection timestamp="2026-10-27T22:59:01.224399535Z">
+        <DropdownSelection timestamp="2026-11-02T18:20:28.455459144Z">
           <Target type="DEFAULT_BOOT">
             <handle>
-              <DeviceId pluginId="LocalEmulator" identifier="path=/home/caique/.android/avd/Small_Phone.avd" />
+              <DeviceId pluginId="Wireless" identifier="serviceName=adb-RQ8XA00VX9H-osgiF4" />
             </handle>
           </Target>
         </DropdownSelection>

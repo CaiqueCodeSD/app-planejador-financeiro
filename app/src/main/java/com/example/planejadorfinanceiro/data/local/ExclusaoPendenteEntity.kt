@@ -7,5 +7,6 @@ import androidx.room.PrimaryKey
 data class ExclusaoPendenteEntity(
     @PrimaryKey
     val uuid: String,
-    val excluidaEmMillis: Long
+    val excluidaEmMillis: Long,
+    val tipoRegistro: String = "LEGADO"
 )
