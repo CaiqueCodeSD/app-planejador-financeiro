@@ -141,18 +141,6 @@ docs/
 
 ### Instalação
 
-Clone o repositório:
-
-```bash
-git clone https://github.com/CaiqueCodeSD/app-planejador-financeiro.git
-```
-
-Entre no diretório:
-
-```bash
-cd app-planejador-financeiro
-```
-
 Abra o projeto no Android Studio, aguarde a sincronização do Gradle e execute a aplicação em um dispositivo ou emulador Android compatível.
 
 ---
@@ -232,18 +220,6 @@ Its architecture considers:
 - Git.
 
 ### Installation
-
-Clone the repository:
-
-```bash
-git clone https://github.com/CaiqueCodeSD/app-planejador-financeiro.git
-```
-
-Navigate to the project directory:
-
-```bash
-cd app-planejador-financeiro
-```
 
 Open the project in Android Studio, wait for Gradle synchronization, and run the application on a compatible Android device or emulator.
 
