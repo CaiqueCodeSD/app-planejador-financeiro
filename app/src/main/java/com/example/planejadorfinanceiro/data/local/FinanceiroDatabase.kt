@@ -13,7 +13,7 @@ import androidx.sqlite.db.SupportSQLiteDatabase
         ExclusaoPendenteEntity::class,
         MovimentacaoEntity::class
     ],
-    version = 5,
+    version = 6,
     exportSchema = true
 )
 abstract class FinanceiroDatabase : RoomDatabase() {
@@ -119,6 +119,24 @@ abstract class FinanceiroDatabase : RoomDatabase() {
             CREATE UNIQUE INDEX IF NOT EXISTS
             index_contas_uuid
             ON contas(uuid)
+            """.trimIndent()
+                )
+            }
+        }
+
+        val MIGRATION_5_6 = object : Migration(5, 6) {
+            override fun migrate(database: SupportSQLiteDatabase) {
+                database.execSQL(
+                    """
+            ALTER TABLE contas
+            ADD COLUMN versao INTEGER NOT NULL DEFAULT 1
+            """.trimIndent()
+                )
+
+                database.execSQL(
+                    """
+            ALTER TABLE movimentacoes
+            ADD COLUMN versao INTEGER NOT NULL DEFAULT 1
             """.trimIndent()
                 )
             }

@@ -4,6 +4,7 @@ import com.example.planejadorfinanceiro.domain.model.Conta
 import com.example.planejadorfinanceiro.domain.model.Movimentacao
 import com.example.planejadorfinanceiro.domain.model.ExclusaoPendente
 import com.example.planejadorfinanceiro.domain.repository.SincronizacaoDataSource
+import kotlinx.coroutines.CompletableDeferred
 
 enum class OperacaoSincronizacao {
     EXCLUSAO,
@@ -16,6 +17,12 @@ class TesteSincronizacaoDataSource : SincronizacaoDataSource {
     val chamadas = mutableListOf<String>()
 
     var falharEm: OperacaoSincronizacao? = null
+
+    // Controle de concorrência para os testes.
+    var pausarEnvioConta: Boolean = false
+
+    val envioContaIniciado = CompletableDeferred<Unit>()
+    val liberarEnvioConta = CompletableDeferred<Unit>()
 
     private fun registrarOperacao(
         operacao: OperacaoSincronizacao,
@@ -33,6 +40,11 @@ class TesteSincronizacaoDataSource : SincronizacaoDataSource {
             OperacaoSincronizacao.CONTA,
             conta.uuid
         )
+
+        if (pausarEnvioConta) {
+            envioContaIniciado.complete(Unit)
+            liberarEnvioConta.await()
+        }
     }
 
     override suspend fun sincronizarMovimentacao(

@@ -19,5 +19,6 @@ data class MovimentacaoEntity(
     val categoria: String,
     val criadaEmMillis: Long = System.currentTimeMillis(),
     val atualizadaEmMillis: Long = System.currentTimeMillis(),
-    val statusSincronizacao: String = StatusSincronizacao.PENDENTE.name
+    val statusSincronizacao: String = StatusSincronizacao.PENDENTE.name,
+    val versao: Long = 1L
 )

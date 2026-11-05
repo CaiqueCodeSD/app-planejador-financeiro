@@ -4,7 +4,6 @@ import androidx.room.Dao
 import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
-import androidx.room.Update
 import androidx.room.Transaction
 import kotlinx.coroutines.flow.Flow
 
@@ -30,31 +29,49 @@ interface ContaDao {
     @Insert(onConflict = OnConflictStrategy.ABORT)
     suspend fun inserir(conta: ContaEntity): Long
 
-    @Update
-    suspend fun atualizar(conta: ContaEntity)
+    @Query("""
+        UPDATE contas
+        SET descricao = :descricao,
+            valorCentavos = :valorCentavos,
+            vencimentoMillis = :vencimentoMillis,
+            situacao = :situacao,
+            atualizadaEmMillis = :atualizadaEmMillis,
+            statusSincronizacao = 'PENDENTE',
+            versao = versao + 1
+        WHERE id = :id
+    """)
+    suspend fun atualizar(
+        id: Long,
+        descricao: String,
+        valorCentavos: Long,
+        vencimentoMillis: Long,
+        situacao: String,
+        atualizadaEmMillis: Long
+    ): Int
 
     @Query("""
         UPDATE contas
         SET situacao = 'PAGA',
             atualizadaEmMillis = :atualizadaEmMillis,
-            statusSincronizacao = 'PENDENTE'
+            statusSincronizacao = 'PENDENTE',
+            versao = versao + 1
         WHERE id = :id
     """)
     suspend fun marcarComoPaga(
         id: Long,
         atualizadaEmMillis: Long
-    )
+    ): Int
 
     @Query("""
         UPDATE contas
         SET statusSincronizacao = 'SINCRONIZADA'
         WHERE uuid = :uuid
-          AND atualizadaEmMillis = :atualizadaEmMillis
+          AND versao = :versao
           AND statusSincronizacao = 'PENDENTE'
     """)
     suspend fun marcarComoSincronizada(
         uuid: String,
-        atualizadaEmMillis: Long
+        versao: Long
     ): Int
 
     @Query("DELETE FROM contas WHERE id = :id")
@@ -66,7 +83,10 @@ interface ContaDao {
     )
 
     @Transaction
-    suspend fun excluirComRegistroPendente(id: Long, excluidaEmMillis: Long) {
+    suspend fun excluirComRegistroPendente(
+        id: Long,
+        excluidaEmMillis: Long
+    ) {
         val conta = buscarPorId(id) ?: return
 
         registrarExclusaoPendente(
@@ -79,5 +99,4 @@ interface ContaDao {
 
         excluir(id)
     }
-
 }

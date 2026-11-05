@@ -4,7 +4,6 @@ import androidx.room.Dao
 import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
-import androidx.room.Update
 import androidx.room.Transaction
 import kotlinx.coroutines.flow.Flow
 
@@ -41,19 +40,38 @@ interface MovimentacaoDao {
     @Insert(onConflict = OnConflictStrategy.ABORT)
     suspend fun inserir(movimentacao: MovimentacaoEntity): Long
 
-    @Update
-    suspend fun atualizar(movimentacao: MovimentacaoEntity)
+    @Query("""
+        UPDATE movimentacoes
+        SET descricao = :descricao,
+            valorCentavos = :valorCentavos,
+            tipo = :tipo,
+            dataMillis = :dataMillis,
+            categoria = :categoria,
+            atualizadaEmMillis = :atualizadaEmMillis,
+            statusSincronizacao = 'PENDENTE',
+            versao = versao + 1
+        WHERE id = :id
+    """)
+    suspend fun atualizar(
+        id: Long,
+        descricao: String,
+        valorCentavos: Long,
+        tipo: String,
+        dataMillis: Long,
+        categoria: String,
+        atualizadaEmMillis: Long
+    ): Int
 
     @Query("""
         UPDATE movimentacoes
         SET statusSincronizacao = 'SINCRONIZADA'
         WHERE uuid = :uuid
-          AND atualizadaEmMillis = :atualizadaEmMillis
+          AND versao = :versao
           AND statusSincronizacao = 'PENDENTE'
     """)
     suspend fun marcarComoSincronizada(
         uuid: String,
-        atualizadaEmMillis: Long
+        versao: Long
     ): Int
 
     @Query("""

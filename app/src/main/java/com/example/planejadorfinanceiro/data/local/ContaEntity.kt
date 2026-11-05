@@ -1,4 +1,3 @@
-
 package com.example.planejadorfinanceiro.data.local
 
 import androidx.room.Entity
@@ -23,5 +22,6 @@ data class ContaEntity(
     val situacao: String = "PENDENTE",
     val criadaEmMillis: Long = System.currentTimeMillis(),
     val atualizadaEmMillis: Long = System.currentTimeMillis(),
-    val statusSincronizacao: String = StatusSincronizacao.PENDENTE.name
+    val statusSincronizacao: String = StatusSincronizacao.PENDENTE.name,
+    val versao: Long = 1L
 )
