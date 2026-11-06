@@ -18,6 +18,7 @@ import com.example.planejadorfinanceiro.domain.model.StatusSincronizacao
 import com.example.planejadorfinanceiro.domain.repository.SincronizacaoDataSource
 import com.example.planejadorfinanceiro.domain.repository.SincronizacaoRepository
 import kotlinx.coroutines.CompletableDeferred
+import kotlinx.coroutines.awaitCancellation
 import kotlinx.coroutines.cancelAndJoin
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
@@ -69,7 +70,6 @@ class SincronizacaoRepositoryTest {
             exclusaoPendenteRepository = exclusaoPendenteRepository,
             sincronizacaoDataSource = dataSource
         )
-
     }
 
     @After
@@ -113,7 +113,6 @@ class SincronizacaoRepositoryTest {
 
         sincronizacaoRepository.sincronizar()
 
-        // Verifica a ordem das operações.
         assertEquals(
             listOf(
                 "EXCLUSAO:uuid-exclusao-teste",
@@ -123,7 +122,6 @@ class SincronizacaoRepositoryTest {
             dataSource.chamadas
         )
 
-        // Verifica se a exclusão foi removida da fila.
         assertTrue(
             exclusaoPendenteRepository.buscarTodas().isEmpty()
         )
@@ -136,7 +134,6 @@ class SincronizacaoRepositoryTest {
             contaSincronizada?.statusSincronizacao
         )
 
-        // Verifica se a movimentação foi sincronizada.
         val movimentacaoSincronizada = database.movimentacaoDao()
             .buscarPorUuid("uuid-movimentacao-teste")
 
@@ -149,31 +146,26 @@ class SincronizacaoRepositoryTest {
             EstadoSincronizacao.Concluida(totalSincronizado = 3),
             sincronizacaoRepository.estado.value
         )
-
     }
 
     @Test
     fun sincronizar_quandoFalhaNaExclusao_deveManterPendencias() = runBlocking {
         inserirDadosDeTeste()
 
-        // Simula uma falha durante o envio da exclusão.
         dataSource.falharEm = OperacaoSincronizacao.EXCLUSAO
 
         sincronizacaoRepository.sincronizar()
 
-        // Verifica se somente a exclusão foi tentada.
         assertEquals(
             listOf("EXCLUSAO:uuid-exclusao-teste"),
             dataSource.chamadas
         )
 
-        // A exclusão deve continuar na fila.
         assertEquals(
             1,
             exclusaoPendenteRepository.buscarTodas().size
         )
 
-        // A conta deve continuar pendente.
         val conta = database.contaDao()
             .buscarPorUuid("uuid-conta-teste")
 
@@ -182,7 +174,6 @@ class SincronizacaoRepositoryTest {
             conta?.statusSincronizacao
         )
 
-        // A movimentação também deve continuar pendente.
         val movimentacao = database.movimentacaoDao()
             .buscarPorUuid("uuid-movimentacao-teste")
 
@@ -191,7 +182,6 @@ class SincronizacaoRepositoryTest {
             movimentacao?.statusSincronizacao
         )
 
-        // O estado deve indicar erro.
         assertTrue(
             sincronizacaoRepository.estado.value is EstadoSincronizacao.Erro
         )
@@ -201,12 +191,10 @@ class SincronizacaoRepositoryTest {
     fun sincronizar_quandoFalhaNaConta_deveManterPendencias() = runBlocking {
         inserirDadosDeTeste()
 
-        // Simula uma falha durante o envio da conta.
         dataSource.falharEm = OperacaoSincronizacao.CONTA
 
         sincronizacaoRepository.sincronizar()
 
-        // A exclusão deve ter sido processada antes da falha.
         assertEquals(
             listOf(
                 "EXCLUSAO:uuid-exclusao-teste",
@@ -215,12 +203,10 @@ class SincronizacaoRepositoryTest {
             dataSource.chamadas
         )
 
-        // A exclusão já foi confirmada e removida da fila.
         assertTrue(
             exclusaoPendenteRepository.buscarTodas().isEmpty()
         )
 
-        // A conta deve continuar pendente.
         val conta = database.contaDao()
             .buscarPorUuid("uuid-conta-teste")
 
@@ -229,7 +215,6 @@ class SincronizacaoRepositoryTest {
             conta?.statusSincronizacao
         )
 
-        // A movimentação não deve ter sido enviada.
         val movimentacao = database.movimentacaoDao()
             .buscarPorUuid("uuid-movimentacao-teste")
 
@@ -238,7 +223,6 @@ class SincronizacaoRepositoryTest {
             movimentacao?.statusSincronizacao
         )
 
-        // A sincronização deve terminar em estado de erro.
         assertTrue(
             sincronizacaoRepository.estado.value is EstadoSincronizacao.Erro
         )
@@ -287,6 +271,246 @@ class SincronizacaoRepositoryTest {
     }
 
     @Test
+    fun sincronizar_quandoContaExcluidaDuranteEnvio_devePreservarExclusaoPendente() = runBlocking {
+        val contaId = database.contaDao().inserir(
+            ContaEntity(
+                uuid = "uuid-conta-concorrencia",
+                descricao = "Conta de teste",
+                valorCentavos = 15000L,
+                vencimentoMillis = 1794000000000L
+            )
+        )
+
+        val envioIniciado = CompletableDeferred<Unit>()
+        val liberarEnvio = CompletableDeferred<Unit>()
+        val chamadas = mutableListOf<String>()
+
+        val dataSourceControlado = object : SincronizacaoDataSource {
+
+            override suspend fun sincronizarConta(
+                conta: com.example.planejadorfinanceiro.domain.model.Conta
+            ) {
+                chamadas.add("CONTA:${conta.uuid}")
+                envioIniciado.complete(Unit)
+                liberarEnvio.await()
+            }
+
+            override suspend fun sincronizarMovimentacao(
+                movimentacao: com.example.planejadorfinanceiro.domain.model.Movimentacao
+            ) {
+                error("Não deveria processar movimentações.")
+            }
+
+            override suspend fun sincronizarExclusao(
+                exclusao: ExclusaoPendente
+            ) {
+                chamadas.add("EXCLUSAO:${exclusao.uuid}")
+            }
+        }
+
+        val repository = SincronizacaoRepositoryImpl(
+            contaRepository,
+            movimentacaoRepository,
+            exclusaoPendenteRepository,
+            dataSourceControlado
+        )
+
+        val tarefa = launch {
+            repository.sincronizar()
+        }
+
+        envioIniciado.await()
+
+        database.contaDao().excluirComRegistroPendente(
+            id = contaId,
+            excluidaEmMillis = 1795000000000L
+        )
+
+        assertEquals(
+            null,
+            database.contaDao().buscarPorUuid("uuid-conta-concorrencia")
+        )
+
+        liberarEnvio.complete(Unit)
+        tarefa.join()
+
+        val exclusoes = exclusaoPendenteRepository.buscarTodas()
+
+        assertEquals(1, exclusoes.size)
+
+        assertEquals(
+            "uuid-conta-concorrencia",
+            exclusoes.first().uuid
+        )
+
+        assertEquals("CONTA", exclusoes.first().tipoRegistro)
+
+        assertEquals(
+            EstadoSincronizacao.Concluida(totalSincronizado = 0),
+            repository.estado.value
+        )
+
+        repository.sincronizar()
+
+        assertEquals(
+            listOf(
+                "CONTA:uuid-conta-concorrencia",
+                "EXCLUSAO:uuid-conta-concorrencia"
+            ),
+            chamadas
+        )
+
+        assertTrue(
+            exclusaoPendenteRepository.buscarTodas().isEmpty()
+        )
+
+        assertEquals(
+            EstadoSincronizacao.Concluida(totalSincronizado = 1),
+            repository.estado.value
+        )
+    }
+
+    @Test
+    fun sincronizar_quandoContaEditadaDuranteEnvio_deveManterNovaVersaoPendente() = runBlocking {
+        val contaDao = database.contaDao()
+
+        val contaId = contaDao.inserir(
+            ContaEntity(
+                uuid = "uuid-conta-edicao",
+                descricao = "Conta original",
+                valorCentavos = 15000L,
+                vencimentoMillis = 1794000000000L,
+                atualizadaEmMillis = 1000L
+            )
+        )
+
+        val envioIniciado = CompletableDeferred<Unit>()
+        val liberarEnvio = CompletableDeferred<Unit>()
+
+        val versoesEnviadas = mutableListOf<Pair<String, Long>>()
+
+        val dataSourceControlado = object : SincronizacaoDataSource {
+
+            override suspend fun sincronizarConta(
+                conta: com.example.planejadorfinanceiro.domain.model.Conta
+            ) {
+                versoesEnviadas.add(
+                    conta.descricao to conta.versao
+                )
+
+                if (versoesEnviadas.size == 1) {
+                    envioIniciado.complete(Unit)
+                    liberarEnvio.await()
+                }
+            }
+
+            override suspend fun sincronizarMovimentacao(
+                movimentacao: com.example.planejadorfinanceiro.domain.model.Movimentacao
+            ) {
+                error("Não deveria processar movimentações.")
+            }
+
+            override suspend fun sincronizarExclusao(
+                exclusao: ExclusaoPendente
+            ) {
+                error("Não deveria processar exclusões.")
+            }
+        }
+
+        val repository = SincronizacaoRepositoryImpl(
+            contaRepository,
+            movimentacaoRepository,
+            exclusaoPendenteRepository,
+            dataSourceControlado
+        )
+
+        val tarefa = launch {
+            repository.sincronizar()
+        }
+
+        envioIniciado.await()
+
+        // Atualização direta pelo DAO, que incrementa a versão atomicamente.
+        contaDao.atualizar(
+            id = contaId,
+            descricao = "Conta atualizada",
+            valorCentavos = 20000L,
+            vencimentoMillis = 1794000000000L,
+            situacao = "PENDENTE",
+            atualizadaEmMillis = 2000L
+        )
+
+        liberarEnvio.complete(Unit)
+        tarefa.join()
+
+        val contaAposPrimeiroEnvio = contaDao.buscarPorUuid(
+            "uuid-conta-edicao"
+        )
+
+        assertEquals(
+            "Conta atualizada",
+            contaAposPrimeiroEnvio?.descricao
+        )
+
+        assertEquals(
+            20000L,
+            contaAposPrimeiroEnvio?.valorCentavos
+        )
+
+        assertEquals(
+            2000L,
+            contaAposPrimeiroEnvio?.atualizadaEmMillis
+        )
+
+        assertEquals(
+            2L,
+            contaAposPrimeiroEnvio?.versao
+        )
+
+        assertEquals(
+            StatusSincronizacao.PENDENTE.name,
+            contaAposPrimeiroEnvio?.statusSincronizacao
+        )
+
+        assertEquals(
+            EstadoSincronizacao.Concluida(totalSincronizado = 0),
+            repository.estado.value
+        )
+
+        repository.sincronizar()
+
+        assertEquals(
+            listOf(
+                "Conta original" to 1L,
+                "Conta atualizada" to 2L
+            ),
+            versoesEnviadas
+        )
+
+        val contaFinal = contaDao.buscarPorUuid("uuid-conta-edicao")
+
+        assertEquals(
+            "Conta atualizada",
+            contaFinal?.descricao
+        )
+
+        assertEquals(
+            2L,
+            contaFinal?.versao
+        )
+
+        assertEquals(
+            StatusSincronizacao.SINCRONIZADA.name,
+            contaFinal?.statusSincronizacao
+        )
+
+        assertEquals(
+            EstadoSincronizacao.Concluida(totalSincronizado = 1),
+            repository.estado.value
+        )
+    }
+
+    @Test
     fun sincronizar_quandoCancelada_devePropagarCancelamentoELiberarMutex() = runBlocking {
         inserirDadosDeTeste()
 
@@ -298,7 +522,7 @@ class SincronizacaoRepositoryTest {
                 exclusao: ExclusaoPendente
             ) {
                 sincronizacaoIniciada.complete(Unit)
-                kotlinx.coroutines.awaitCancellation()
+                awaitCancellation()
             }
 
             override suspend fun sincronizarConta(

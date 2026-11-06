@@ -1,5 +1,5 @@
-package com.example.planejadorfinanceiro.domain.model
 
+package com.example.planejadorfinanceiro.domain.model
 import java.util.UUID
 
 enum class SituacaoConta {
@@ -14,7 +14,8 @@ data class Conta(
     val vencimentoMillis: Long,
     val situacao: SituacaoConta = SituacaoConta.PENDENTE,
     val criadaEmMillis: Long = System.currentTimeMillis(),
-    val uuid: String = java.util.UUID.randomUUID().toString(),
+    val uuid: String = UUID.randomUUID().toString(),
     val atualizadaEmMillis: Long = System.currentTimeMillis(),
-    val statusSincronizacao: StatusSincronizacao = StatusSincronizacao.PENDENTE
+    val statusSincronizacao: StatusSincronizacao = StatusSincronizacao.PENDENTE,
+    val versao: Long = 1L
 )

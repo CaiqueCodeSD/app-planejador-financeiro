@@ -7,6 +7,7 @@ import kotlinx.coroutines.flow.Flow
 interface MovimentacaoRepository {
 
     fun observarMovimentacoes(): Flow<List<Movimentacao>>
+
     fun observarTotalPorTipoNoPeriodo(
         tipo: TipoMovimentacao,
         inicioMillis: Long,
@@ -14,12 +15,15 @@ interface MovimentacaoRepository {
     ): Flow<Long>
 
     suspend fun buscarPorId(id: Long): Movimentacao?
+
     suspend fun salvar(movimentacao: Movimentacao): Long
+
     suspend fun excluir(id: Long)
+
     suspend fun buscarPendentesSincronizacao(): List<Movimentacao>
+
     suspend fun marcarComoSincronizada(
         uuid: String,
-        atualizadaEmMillis: Long
+        versao: Long
     ): Boolean
-
 }

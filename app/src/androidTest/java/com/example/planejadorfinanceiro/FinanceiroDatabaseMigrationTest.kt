@@ -18,7 +18,7 @@ class FinanceiroDatabaseMigrationTest {
     private val databaseName = "migration-test.db"
 
     @Test
-    fun migration4To5_preservesPendingDeletionsAndCreatesUniqueIndex() {
+    fun migration4To6_preservesDataAndInitializesVersion() {
         val context = InstrumentationRegistry
             .getInstrumentation()
             .targetContext
@@ -82,6 +82,7 @@ class FinanceiroDatabaseMigrationTest {
                     """.trimIndent()
                 )
 
+                // Insere uma conta existente antes da migração.
                 db.execSQL(
                     """
                     INSERT INTO contas (
@@ -102,12 +103,43 @@ class FinanceiroDatabaseMigrationTest {
                     """.trimIndent()
                 )
 
+                // Insere uma movimentação existente antes da migração.
+                db.execSQL(
+                    """
+                    INSERT INTO movimentacoes (
+                        uuid,
+                        descricao,
+                        valorCentavos,
+                        tipo,
+                        dataMillis,
+                        categoria,
+                        criadaEmMillis,
+                        atualizadaEmMillis,
+                        statusSincronizacao
+                    ) VALUES (
+                        'uuid-movimentacao',
+                        'Movimentação de teste',
+                        5000,
+                        'RECEITA',
+                        123456789,
+                        'Salário',
+                        123456789,
+                        123456789,
+                        'PENDENTE'
+                    )
+                    """.trimIndent()
+                )
+
+                // Insere uma exclusão pendente legada.
                 db.execSQL(
                     """
                     INSERT INTO exclusoes_pendentes (
                         uuid,
                         excluidaEmMillis
-                    ) VALUES ('uuid-legado', 123456789)
+                    ) VALUES (
+                        'uuid-legado',
+                        123456789
+                    )
                     """.trimIndent()
                 )
             }
@@ -122,24 +154,28 @@ class FinanceiroDatabaseMigrationTest {
         helper.writableDatabase
         helper.close()
 
-        // O Room executa a migração real 4 -> 5.
+        // O Room executa o caminho real de migração 4 -> 5 -> 6.
         val database = Room.databaseBuilder(
             context,
             FinanceiroDatabase::class.java,
             databaseName
         )
-            .addMigrations(FinanceiroDatabase.MIGRATION_4_5)
+            .addMigrations(
+                FinanceiroDatabase.MIGRATION_4_5,
+                FinanceiroDatabase.MIGRATION_5_6
+            )
             .build()
 
         try {
             val db = database.openHelper.writableDatabase
 
+            // Verifica a preservação da exclusão pendente legada.
             db.query(
                 """
                 SELECT uuid, excluidaEmMillis, tipoRegistro
                 FROM exclusoes_pendentes
                 WHERE uuid = 'uuid-legado'
-                """
+                """.trimIndent()
             ).use { cursor ->
                 assertTrue(cursor.moveToFirst())
                 assertEquals("uuid-legado", cursor.getString(0))
@@ -147,6 +183,31 @@ class FinanceiroDatabaseMigrationTest {
                 assertEquals("LEGADO", cursor.getString(2))
             }
 
+            // Verifica a versão inicial da conta existente.
+            db.query(
+                """
+                SELECT versao
+                FROM contas
+                WHERE uuid = 'uuid-conta'
+                """.trimIndent()
+            ).use { cursor ->
+                assertTrue(cursor.moveToFirst())
+                assertEquals(1L, cursor.getLong(0))
+            }
+
+            // Verifica a versão inicial da movimentação existente.
+            db.query(
+                """
+                SELECT versao
+                FROM movimentacoes
+                WHERE uuid = 'uuid-movimentacao'
+                """.trimIndent()
+            ).use { cursor ->
+                assertTrue(cursor.moveToFirst())
+                assertEquals(1L, cursor.getLong(0))
+            }
+
+            // Verifica a existência do índice único de contas.
             db.query("PRAGMA index_list('contas')").use { cursor ->
                 var indexFound = false
 

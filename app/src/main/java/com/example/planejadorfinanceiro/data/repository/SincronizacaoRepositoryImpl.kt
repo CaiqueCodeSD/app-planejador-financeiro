@@ -4,8 +4,8 @@ import com.example.planejadorfinanceiro.domain.model.EstadoSincronizacao
 import com.example.planejadorfinanceiro.domain.repository.ContaRepository
 import com.example.planejadorfinanceiro.domain.repository.ExclusaoPendenteRepository
 import com.example.planejadorfinanceiro.domain.repository.MovimentacaoRepository
-import com.example.planejadorfinanceiro.domain.repository.SincronizacaoDataSource
 import com.example.planejadorfinanceiro.domain.repository.SincronizacaoRepository
+import com.example.planejadorfinanceiro.domain.repository.SincronizacaoDataSource
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -19,9 +19,8 @@ class SincronizacaoRepositoryImpl(
     private val sincronizacaoDataSource: SincronizacaoDataSource
 ) : SincronizacaoRepository {
 
-    private val _estado = MutableStateFlow<EstadoSincronizacao>(
-        EstadoSincronizacao.Ociosa
-    )
+    private val _estado =
+        MutableStateFlow<EstadoSincronizacao>(EstadoSincronizacao.Ociosa)
 
     private val mutex = Mutex()
 
@@ -36,7 +35,6 @@ class SincronizacaoRepositoryImpl(
 
             var totalSincronizado = 0
 
-            // 1. Processar exclusões pendentes.
             val exclusoes = exclusaoPendenteRepository.buscarTodas()
 
             for (exclusao in exclusoes) {
@@ -53,7 +51,6 @@ class SincronizacaoRepositoryImpl(
                 }
             }
 
-            // 2. Processar contas pendentes.
             val contas = contaRepository.buscarPendentesSincronizacao()
 
             for (conta in contas) {
@@ -61,7 +58,7 @@ class SincronizacaoRepositoryImpl(
 
                 val confirmada = contaRepository.marcarComoSincronizada(
                     uuid = conta.uuid,
-                    atualizadaEmMillis = conta.atualizadaEmMillis
+                    versao = conta.versao
                 )
 
                 if (confirmada) {
@@ -69,7 +66,6 @@ class SincronizacaoRepositoryImpl(
                 }
             }
 
-            // 3. Processar movimentações pendentes.
             val movimentacoes =
                 movimentacaoRepository.buscarPendentesSincronizacao()
 
@@ -79,7 +75,7 @@ class SincronizacaoRepositoryImpl(
                 val confirmada =
                     movimentacaoRepository.marcarComoSincronizada(
                         uuid = movimentacao.uuid,
-                        atualizadaEmMillis = movimentacao.atualizadaEmMillis
+                        versao = movimentacao.versao
                     )
 
                 if (confirmada) {
@@ -87,9 +83,8 @@ class SincronizacaoRepositoryImpl(
                 }
             }
 
-            _estado.value = EstadoSincronizacao.Concluida(
-                totalSincronizado = totalSincronizado
-            )
+            _estado.value =
+                EstadoSincronizacao.Concluida(totalSincronizado)
 
         } catch (e: CancellationException) {
             _estado.value = EstadoSincronizacao.Ociosa
@@ -97,8 +92,7 @@ class SincronizacaoRepositoryImpl(
 
         } catch (e: Exception) {
             _estado.value = EstadoSincronizacao.Erro(
-                mensagem = e.message
-                    ?: "Não foi possível concluir a sincronização."
+                e.message ?: "Não foi possível concluir a sincronização."
             )
 
         } finally {

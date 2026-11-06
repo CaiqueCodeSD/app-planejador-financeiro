@@ -13,24 +13,27 @@ class MovimentacaoRepositoryImpl(
     private val movimentacaoDao: MovimentacaoDao
 ) : MovimentacaoRepository {
 
-    override fun observarMovimentacoes(): Flow<List<Movimentacao>> =
-        movimentacaoDao.observarTodas().map { lista ->
-            lista.map { it.toDomain() }
+    override fun observarMovimentacoes(): Flow<List<Movimentacao>> {
+        return movimentacaoDao.observarTodas().map { movimentacoes ->
+            movimentacoes.map { it.toDomain() }
         }
+    }
 
     override fun observarTotalPorTipoNoPeriodo(
         tipo: TipoMovimentacao,
         inicioMillis: Long,
         fimMillis: Long
-    ): Flow<Long> =
-        movimentacaoDao.observarTotalPorTipoNoPeriodo(
-            tipo.name,
-            inicioMillis,
-            fimMillis
+    ): Flow<Long> {
+        return movimentacaoDao.observarTotalPorTipoNoPeriodo(
+            tipo = tipo.name,
+            inicioMillis = inicioMillis,
+            fimMillis = fimMillis
         )
+    }
 
-    override suspend fun buscarPorId(id: Long): Movimentacao? =
-        movimentacaoDao.buscarPorId(id)?.toDomain()
+    override suspend fun buscarPorId(id: Long): Movimentacao? {
+        return movimentacaoDao.buscarPorId(id)?.toDomain()
+    }
 
     override suspend fun salvar(movimentacao: Movimentacao): Long {
         val movimentacaoAtualizada = movimentacao.copy(
@@ -43,7 +46,16 @@ class MovimentacaoRepositoryImpl(
         return if (movimentacaoAtualizada.id == 0L) {
             movimentacaoDao.inserir(entity)
         } else {
-            movimentacaoDao.atualizar(entity)
+            movimentacaoDao.atualizar(
+                id = entity.id,
+                descricao = entity.descricao,
+                valorCentavos = entity.valorCentavos,
+                tipo = entity.tipo,
+                dataMillis = entity.dataMillis,
+                categoria = entity.categoria,
+                atualizadaEmMillis = entity.atualizadaEmMillis
+            )
+
             movimentacaoAtualizada.id
         }
     }
@@ -55,22 +67,25 @@ class MovimentacaoRepositoryImpl(
         )
     }
 
-    override suspend fun buscarPendentesSincronizacao(): List<Movimentacao> =
-        movimentacaoDao.buscarPendentesSincronizacao().map { it.toDomain() }
+    override suspend fun buscarPendentesSincronizacao(): List<Movimentacao> {
+        return movimentacaoDao.buscarPendentesSincronizacao().map {
+            it.toDomain()
+        }
+    }
 
     override suspend fun marcarComoSincronizada(
         uuid: String,
-        atualizadaEmMillis: Long
+        versao: Long
     ): Boolean {
-        val linhasAtualizadas = movimentacaoDao.marcarComoSincronizada(
-            uuid,
-            atualizadaEmMillis
-        )
-
-        return linhasAtualizadas > 0
+        return movimentacaoDao.marcarComoSincronizada(
+            uuid = uuid,
+            versao = versao
+        ) > 0
     }
+}
 
-    private fun MovimentacaoEntity.toDomain() = Movimentacao(
+private fun MovimentacaoEntity.toDomain(): Movimentacao {
+    return Movimentacao(
         id = id,
         uuid = uuid,
         descricao = descricao,
@@ -80,10 +95,13 @@ class MovimentacaoRepositoryImpl(
         categoria = categoria,
         criadaEmMillis = criadaEmMillis,
         atualizadaEmMillis = atualizadaEmMillis,
-        statusSincronizacao = StatusSincronizacao.valueOf(statusSincronizacao)
+        statusSincronizacao = StatusSincronizacao.valueOf(statusSincronizacao),
+        versao = versao
     )
+}
 
-    private fun Movimentacao.toEntity() = MovimentacaoEntity(
+private fun Movimentacao.toEntity(): MovimentacaoEntity {
+    return MovimentacaoEntity(
         id = id,
         uuid = uuid,
         descricao = descricao,
@@ -93,6 +111,7 @@ class MovimentacaoRepositoryImpl(
         categoria = categoria,
         criadaEmMillis = criadaEmMillis,
         atualizadaEmMillis = atualizadaEmMillis,
-        statusSincronizacao = statusSincronizacao.name
+        statusSincronizacao = statusSincronizacao.name,
+        versao = versao
     )
 }

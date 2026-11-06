@@ -13,5 +13,6 @@ data class Movimentacao(
     val criadaEmMillis: Long = System.currentTimeMillis(),
     val atualizadaEmMillis: Long = System.currentTimeMillis(),
     val statusSincronizacao: StatusSincronizacao =
-        StatusSincronizacao.PENDENTE
+        StatusSincronizacao.PENDENTE,
+    val versao: Long = 1L
 )
