@@ -1,5 +1,6 @@
 package com.example.planejadorfinanceiro.di
 
+import com.example.planejadorfinanceiro.presentation.acesso.ModoAcessoViewModel
 import com.example.planejadorfinanceiro.presentation.conta.ContaViewModel
 import com.example.planejadorfinanceiro.presentation.dashboard.DashboardViewModel
 import com.example.planejadorfinanceiro.presentation.movimentacao.MovimentacaoViewModel
@@ -18,4 +19,7 @@ val viewModelModule = module {
     viewModel {
         DashboardViewModel(get())
     }
+
+    viewModel { ModoAcessoViewModel(get()) }
+
 }

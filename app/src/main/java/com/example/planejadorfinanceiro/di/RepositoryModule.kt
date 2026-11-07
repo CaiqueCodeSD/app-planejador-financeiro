@@ -7,6 +7,8 @@ import com.example.planejadorfinanceiro.data.repository.MovimentacaoRepositoryIm
 import com.example.planejadorfinanceiro.domain.repository.ContaRepository
 import com.example.planejadorfinanceiro.domain.repository.MovimentacaoRepository
 import org.koin.dsl.module
+import com.example.planejadorfinanceiro.data.repository.ModoAcessoRepositoryImpl
+import com.example.planejadorfinanceiro.domain.repository.ModoAcessoRepository
 
 val repositoryModule = module {
     single<ContaRepository> {
@@ -20,4 +22,9 @@ val repositoryModule = module {
     single<ExclusaoPendenteRepository> {
         ExclusaoPendenteRepositoryImpl(get())
     }
+
+    single<ModoAcessoRepository> {
+        ModoAcessoRepositoryImpl(get())
+    }
+
 }
