@@ -37,6 +37,7 @@ android {
 }
 
 dependencies {
+    implementation(libs.okhttp)
     implementation(libs.androidx.datastore.preferences)
     implementation(libs.google.play.services.auth)
     androidTestImplementation(libs.room.testing)

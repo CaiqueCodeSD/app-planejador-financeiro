@@ -13,15 +13,21 @@ import androidx.lifecycle.repeatOnLifecycle
 import com.example.planejadorfinanceiro.MainActivity
 import com.example.planejadorfinanceiro.R
 import com.example.planejadorfinanceiro.domain.model.ModoAcesso
+import com.example.planejadorfinanceiro.domain.repository.GoogleAuthorizationRepository
+import com.example.planejadorfinanceiro.domain.repository.ResultadoAutorizacao
 import com.google.android.gms.auth.api.identity.AuthorizationRequest
 import com.google.android.gms.auth.api.identity.Identity
 import com.google.android.gms.common.api.Scope
 import kotlinx.coroutines.launch
+import org.koin.android.ext.android.inject
 import org.koin.androidx.viewmodel.ext.android.viewModel
 
 class AcessoActivity : AppCompatActivity() {
 
     private val viewModel: ModoAcessoViewModel by viewModel()
+
+    private val googleAuthorizationRepository:
+            GoogleAuthorizationRepository by inject()
 
     private var navegacaoRealizada = false
 
@@ -34,21 +40,17 @@ class AcessoActivity : AppCompatActivity() {
                 try {
                     val autorizacao = Identity
                         .getAuthorizationClient(this)
-                        .getAuthorizationResultFromIntent(
-                            resultado.data
-                        )
+                        .getAuthorizationResultFromIntent(resultado.data)
 
-                    processarResultadoAutorizacao(
-                        autorizacao.accessToken
-                    )
+                    processarTokenGoogle(autorizacao.accessToken)
 
                 } catch (erro: Exception) {
-                    Toast.makeText(
-                        this,
-                        "Falha ao concluir autorização Google.",
-                        Toast.LENGTH_LONG
-                    ).show()
+                    exibirMensagem(
+                        "Falha ao concluir autorização Google."
+                    )
                 }
+            } else {
+                exibirMensagem("Autorização Google cancelada.")
             }
         }
 
@@ -63,18 +65,39 @@ class AcessoActivity : AppCompatActivity() {
     private fun configurarBotoes() {
         findViewById<Button>(R.id.btnContinuarVisitante)
             .setOnClickListener {
-                viewModel.salvarModoAcesso(
-                    ModoAcesso.VISITANTE
-                )
+                viewModel.salvarModoAcesso(ModoAcesso.VISITANTE)
             }
 
         findViewById<Button>(R.id.btnConectarGoogle)
             .setOnClickListener {
-                solicitarAutorizacaoGoogle()
+                iniciarAutorizacaoGoogle()
             }
     }
 
-    private fun solicitarAutorizacaoGoogle() {
+    private fun iniciarAutorizacaoGoogle() {
+        lifecycleScope.launch {
+            try {
+                when (
+                    val resultado =
+                        googleAuthorizationRepository.obterAccessToken()
+                ) {
+                    is ResultadoAutorizacao.TokenDisponivel -> {
+                        processarTokenGoogle(resultado.token)
+                    }
+
+                    ResultadoAutorizacao.RequerInteracao -> {
+                        solicitarConsentimentoGoogle()
+                    }
+                }
+            } catch (erro: Exception) {
+                exibirMensagem(
+                    "Não foi possível obter autorização Google."
+                )
+            }
+        }
+    }
+
+    private fun solicitarConsentimentoGoogle() {
         val requisicao = AuthorizationRequest.builder()
             .setRequestedScopes(
                 listOf(
@@ -99,45 +122,34 @@ class AcessoActivity : AppCompatActivity() {
                             ).build()
                         )
                     } else {
-                        Toast.makeText(
-                            this,
-                            "Não foi possível iniciar a autorização Google.",
-                            Toast.LENGTH_LONG
-                        ).show()
+                        exibirMensagem(
+                            "Não foi possível iniciar a autorização Google."
+                        )
                     }
-
                 } else {
-                    processarResultadoAutorizacao(
-                        resultado.accessToken
-                    )
+                    processarTokenGoogle(resultado.accessToken)
                 }
             }
             .addOnFailureListener {
-                Toast.makeText(
-                    this,
-                    "Não foi possível solicitar autorização Google.",
-                    Toast.LENGTH_LONG
-                ).show()
+                exibirMensagem(
+                    "Não foi possível solicitar autorização Google."
+                )
             }
     }
 
-    private fun processarResultadoAutorizacao(
-        accessToken: String?
-    ) {
+    private fun processarTokenGoogle(accessToken: String?) {
         if (accessToken.isNullOrBlank()) {
-            Toast.makeText(
-                this,
-                "O Google não forneceu um token de acesso.",
-                Toast.LENGTH_LONG
-            ).show()
+            exibirMensagem(
+                "O Google não forneceu um token de acesso."
+            )
             return
         }
 
-        Toast.makeText(
-            this,
-            "Autorização Google recebida com sucesso!",
-            Toast.LENGTH_LONG
-        ).show()
+        // A próxima etapa utilizará este token para criar
+        // e configurar a planilha do usuário.
+        exibirMensagem(
+            "Autorização Google recebida com sucesso!"
+        )
     }
 
     private fun observarModoAcesso() {
@@ -168,5 +180,13 @@ class AcessoActivity : AppCompatActivity() {
         )
 
         finish()
+    }
+
+    private fun exibirMensagem(mensagem: String) {
+        Toast.makeText(
+            this,
+            mensagem,
+            Toast.LENGTH_LONG
+        ).show()
     }
 }
