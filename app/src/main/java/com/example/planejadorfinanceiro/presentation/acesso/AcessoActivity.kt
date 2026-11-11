@@ -21,8 +21,11 @@ import com.google.android.gms.common.api.Scope
 import kotlinx.coroutines.launch
 import org.koin.android.ext.android.inject
 import org.koin.androidx.viewmodel.ext.android.viewModel
+import com.example.planejadorfinanceiro.domain.usecase.ConectarGoogleUseCase
 
 class AcessoActivity : AppCompatActivity() {
+
+    private val conectarGoogleUseCase: ConectarGoogleUseCase by inject()
 
     private val viewModel: ModoAcessoViewModel by viewModel()
 
@@ -139,17 +142,24 @@ class AcessoActivity : AppCompatActivity() {
 
     private fun processarTokenGoogle(accessToken: String?) {
         if (accessToken.isNullOrBlank()) {
-            exibirMensagem(
-                "O Google não forneceu um token de acesso."
-            )
+            exibirMensagem("O Google não forneceu um token de acesso.")
             return
         }
 
-        // A próxima etapa utilizará este token para criar
-        // e configurar a planilha do usuário.
-        exibirMensagem(
-            "Autorização Google recebida com sucesso!"
-        )
+        lifecycleScope.launch {
+            try {
+                conectarGoogleUseCase(accessToken)
+
+                exibirMensagem(
+                    "Google conectado e planilha configurada com sucesso!"
+                )
+
+            } catch (erro: Exception) {
+                exibirMensagem(
+                    "Não foi possível concluir a conexão com o Google."
+                )
+            }
+        }
     }
 
     private fun observarModoAcesso() {

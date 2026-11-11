@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/containerStatusSincronizacao"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="horizontal"
+    android:gravity="center_vertical"
+    android:padding="12dp"
+    android:background="@drawable/pf_bg_glass_card"
+    android:visibility="gone">
+
+    <ProgressBar
+        android:id="@+id/progressStatusSincronizacao"
+        style="?android:attr/progressBarStyleSmall"
+        android:layout_width="18dp"
+        android:layout_height="18dp"
+        android:visibility="gone" />
+
+    <TextView
+        android:id="@+id/tvStatusSincronizacao"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_weight="1"
+        android:layout_marginStart="10dp"
+        android:textColor="?android:attr/textColorPrimary"
+        android:textSize="13sp"
+        android:text="Aguardando sincronização" />
+
+</LinearLayout>

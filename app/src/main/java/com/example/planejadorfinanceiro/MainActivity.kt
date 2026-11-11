@@ -40,8 +40,13 @@ import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.Date
 import java.util.Locale
+import android.widget.ProgressBar
+import com.example.planejadorfinanceiro.presentation.sincronizacao.SincronizacaoUiState
+import com.example.planejadorfinanceiro.presentation.sincronizacao.SincronizacaoViewModel
 
 class MainActivity : AppCompatActivity() {
+
+    private val sincronizacaoViewModel: SincronizacaoViewModel by viewModel()
 
     private val contaViewModel: ContaViewModel by viewModel()
     private val dashboardViewModel: DashboardViewModel by viewModel()
@@ -99,6 +104,7 @@ class MainActivity : AppCompatActivity() {
         observarEstadoMovimentacao()
         configurarBotaoVoltar()
         observarEstadoExclusao()
+        observarEstadoSincronizacao()
     }
 
     // --------------------------------------------------
@@ -239,6 +245,62 @@ class MainActivity : AppCompatActivity() {
 
         dialog.show()
     }
+
+
+    private fun observarEstadoSincronizacao() {
+        lifecycleScope.launch {
+            repeatOnLifecycle(Lifecycle.State.STARTED) {
+                sincronizacaoViewModel.uiState.collect { estado ->
+
+                    val container = findViewById<View>(
+                        R.id.statusSincronizacao
+                    )
+
+                    val progress = findViewById<ProgressBar>(
+                        R.id.progressStatusSincronizacao
+                    )
+
+                    val mensagem = findViewById<TextView>(
+                        R.id.tvStatusSincronizacao
+                    )
+
+                    when (estado) {
+                        SincronizacaoUiState.Ociosa -> {
+                            container.visibility = View.GONE
+                        }
+
+                        SincronizacaoUiState.EmAndamento -> {
+                            container.visibility = View.VISIBLE
+                            progress.visibility = View.VISIBLE
+                            mensagem.text = "Sincronizando dados com o Google..."
+                        }
+
+                        is SincronizacaoUiState.Concluida -> {
+                            container.visibility = View.VISIBLE
+                            progress.visibility = View.GONE
+                            mensagem.text =
+                                "${estado.totalSincronizado} registros sincronizados."
+                        }
+
+                        is SincronizacaoUiState.Erro -> {
+                            container.visibility = View.VISIBLE
+                            progress.visibility = View.GONE
+                            mensagem.text =
+                                "Falha na sincronização: ${estado.mensagem}"
+                        }
+
+                        SincronizacaoUiState.AutorizacaoNecessaria -> {
+                            container.visibility = View.VISIBLE
+                            progress.visibility = View.GONE
+                            mensagem.text =
+                                "É necessário autorizar novamente o Google."
+                        }
+                    }
+                }
+            }
+        }
+    }
+
 
     // --------------------------------------------------
     // CADASTRO DE CONTAS

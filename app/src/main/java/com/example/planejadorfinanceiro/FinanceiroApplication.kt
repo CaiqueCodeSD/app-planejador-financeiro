@@ -8,6 +8,7 @@ import org.koin.android.ext.koin.androidContext
 import org.koin.android.ext.koin.androidLogger
 import org.koin.core.context.startKoin
 import com.example.planejadorfinanceiro.di.dataStoreModule
+import com.example.planejadorfinanceiro.di.useCaseModule
 
 class FinanceiroApplication : Application() {
 
@@ -22,7 +23,8 @@ class FinanceiroApplication : Application() {
                 databaseModule,
                 dataStoreModule,
                 repositoryModule,
-                viewModelModule
+                viewModelModule,
+                useCaseModule
             )
         }
     }
