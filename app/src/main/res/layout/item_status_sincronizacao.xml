@@ -27,4 +27,12 @@
         android:textSize="13sp"
         android:text="Aguardando sincronização" />
 
+    <Button
+        android:id="@+id/btnSincronizar"
+        android:layout_width="wrap_content"
+        android:layout_height="40dp"
+        android:minWidth="0dp"
+        android:text="Sincronizar"
+        android:textSize="12sp" />
+
 </LinearLayout>

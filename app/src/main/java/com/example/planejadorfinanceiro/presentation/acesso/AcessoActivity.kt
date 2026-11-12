@@ -2,6 +2,7 @@ package com.example.planejadorfinanceiro.presentation.acesso
 
 import android.content.Intent
 import android.os.Bundle
+import android.view.View
 import android.widget.Button
 import android.widget.Toast
 import androidx.activity.result.IntentSenderRequest
@@ -57,6 +58,13 @@ class AcessoActivity : AppCompatActivity() {
             }
         }
 
+    private val modoConexao: Boolean
+        get() = intent.getBooleanExtra(EXTRA_MODO_CONEXAO, false)
+
+    companion object {
+        const val EXTRA_MODO_CONEXAO = "extra_modo_conexao"
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_acesso)
@@ -66,10 +74,13 @@ class AcessoActivity : AppCompatActivity() {
     }
 
     private fun configurarBotoes() {
-        findViewById<Button>(R.id.btnContinuarVisitante)
-            .setOnClickListener {
+        findViewById<Button>(R.id.btnContinuarVisitante).apply {
+            visibility = if (modoConexao) View.GONE else View.VISIBLE
+
+            setOnClickListener {
                 viewModel.salvarModoAcesso(ModoAcesso.VISITANTE)
             }
+        }
 
         findViewById<Button>(R.id.btnConectarGoogle)
             .setOnClickListener {
@@ -154,6 +165,12 @@ class AcessoActivity : AppCompatActivity() {
                     "Google conectado e planilha configurada com sucesso!"
                 )
 
+                if (modoConexao) {
+                    setResult(RESULT_OK)
+                    finish()
+                    return@launch
+                }
+
             } catch (erro: Exception) {
                 exibirMensagem(
                     "Não foi possível concluir a conexão com o Google."
@@ -172,7 +189,9 @@ class AcessoActivity : AppCompatActivity() {
 
                         ModoAcesso.VISITANTE,
                         ModoAcesso.CONECTADO_GOOGLE -> {
-                            abrirAplicativo()
+                            if (!modoConexao) {
+                                abrirAplicativo()
+                            }
                         }
                     }
                 }

@@ -27,7 +27,8 @@ val viewModelModule = module {
 
     viewModel {
         SincronizacaoViewModel(
-            repository = get()
+            repository = get(),
+            modoAcessoRepository = get()
         )
     }
 
