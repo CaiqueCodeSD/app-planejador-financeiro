@@ -1,5 +1,6 @@
 package com.example.planejadorfinanceiro.data.repository
 
+import com.example.planejadorfinanceiro.domain.exception.AutorizacaoGoogleNecessariaException
 import com.example.planejadorfinanceiro.domain.model.EstadoSincronizacao
 import com.example.planejadorfinanceiro.domain.repository.ContaRepository
 import com.example.planejadorfinanceiro.domain.repository.ExclusaoPendenteRepository
@@ -32,7 +33,6 @@ class SincronizacaoRepositoryImpl(
 
         try {
             _estado.value = EstadoSincronizacao.EmAndamento
-
             var totalSincronizado = 0
 
             val exclusoes = exclusaoPendenteRepository.buscarTodas()
@@ -89,6 +89,9 @@ class SincronizacaoRepositoryImpl(
         } catch (e: CancellationException) {
             _estado.value = EstadoSincronizacao.Ociosa
             throw e
+
+        } catch (e: AutorizacaoGoogleNecessariaException) {
+            _estado.value = EstadoSincronizacao.AutorizacaoNecessaria
 
         } catch (e: Exception) {
             _estado.value = EstadoSincronizacao.Erro(

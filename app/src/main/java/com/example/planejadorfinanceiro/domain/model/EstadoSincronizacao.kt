@@ -13,4 +13,7 @@ sealed interface EstadoSincronizacao {
     data class Erro(
         val mensagem: String
     ) : EstadoSincronizacao
+
+    data object AutorizacaoNecessaria : EstadoSincronizacao
+
 }

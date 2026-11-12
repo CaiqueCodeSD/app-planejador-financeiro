@@ -10,6 +10,7 @@ import android.widget.Button
 import android.widget.EditText
 import android.widget.ImageButton
 import android.widget.LinearLayout
+import android.widget.ProgressBar
 import android.widget.RadioGroup
 import android.widget.Spinner
 import android.widget.TextView
@@ -32,6 +33,8 @@ import com.example.planejadorfinanceiro.presentation.conta.ContaViewModel
 import com.example.planejadorfinanceiro.presentation.dashboard.DashboardViewModel
 import com.example.planejadorfinanceiro.presentation.movimentacao.HistoricoMovimentacoesActivity
 import com.example.planejadorfinanceiro.presentation.movimentacao.MovimentacaoViewModel
+import com.example.planejadorfinanceiro.presentation.sincronizacao.SincronizacaoUiState
+import com.example.planejadorfinanceiro.presentation.sincronizacao.SincronizacaoViewModel
 import kotlinx.coroutines.launch
 import org.koin.androidx.viewmodel.ext.android.viewModel
 import java.math.BigDecimal
@@ -40,13 +43,18 @@ import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.Date
 import java.util.Locale
+import com.example.planejadorfinanceiro.presentation.acesso.ModoAcessoViewModel
+import com.example.planejadorfinanceiro.domain.model.ModoAcesso
+import com.example.planejadorfinanceiro.presentation.acesso.AcessoActivity
 
 class MainActivity : AppCompatActivity() {
+
+    private val sincronizacaoViewModel: SincronizacaoViewModel by viewModel()
 
     private val contaViewModel: ContaViewModel by viewModel()
     private val dashboardViewModel: DashboardViewModel by viewModel()
     private val movimentacaoViewModel: MovimentacaoViewModel by viewModel()
-
+    private val modoAcessoViewModel: ModoAcessoViewModel by viewModel()
     private var contaEmEdicaoId: Long? = null
     private var listaVaziaView: TextView? = null
     private var vencimentoSelecionadoMillis: Long? = null
@@ -68,6 +76,15 @@ class MainActivity : AppCompatActivity() {
                 if (id > 0L) {
                     carregarMovimentacaoParaEdicao(id)
                 }
+            }
+        }
+
+    private val acessoLauncher =
+        registerForActivityResult(
+            ActivityResultContracts.StartActivityForResult()
+        ) { resultado ->
+            if (resultado.resultCode == RESULT_OK) {
+                sincronizacaoViewModel.sincronizar()
             }
         }
 
@@ -99,6 +116,10 @@ class MainActivity : AppCompatActivity() {
         observarEstadoMovimentacao()
         configurarBotaoVoltar()
         observarEstadoExclusao()
+        observarEstadoSincronizacao()
+        configurarBotaoSincronizar()
+        observarModoAcesso()
+        configurarBotaoConectarGoogle()
     }
 
     // --------------------------------------------------
@@ -175,6 +196,38 @@ class MainActivity : AppCompatActivity() {
         )
     }
 
+    private fun configurarBotaoSincronizar() {
+        findViewById<Button>(R.id.btnSincronizar).setOnClickListener {
+            sincronizacaoViewModel.sincronizar()
+        }
+    }
+
+    private fun configurarBotaoConectarGoogle() {
+        findViewById<Button>(R.id.btnConectarGoogle)
+            .setOnClickListener {
+                val intent = Intent(this, AcessoActivity::class.java).apply {
+                    putExtra(AcessoActivity.EXTRA_MODO_CONEXAO, true)
+                }
+
+                acessoLauncher.launch(intent)
+            }
+    }
+
+    private fun observarModoAcesso() {
+        lifecycleScope.launch {
+            repeatOnLifecycle(Lifecycle.State.STARTED) {
+                modoAcessoViewModel.modoAcesso.collect { modo ->
+                    findViewById<View>(R.id.containerConexaoGoogle).visibility =
+                        if (modo == ModoAcesso.VISITANTE) {
+                            View.VISIBLE
+                        } else {
+                            View.GONE
+                        }
+                }
+            }
+        }
+    }
+
     // --------------------------------------------------
     // BOTÃO VOLTAR
     // --------------------------------------------------
@@ -239,6 +292,84 @@ class MainActivity : AppCompatActivity() {
 
         dialog.show()
     }
+
+
+    private fun observarEstadoSincronizacao() {
+        val container = findViewById<View>(
+            R.id.statusSincronizacao
+        )
+
+        val progress = findViewById<ProgressBar>(
+            R.id.progressStatusSincronizacao
+        )
+
+        val mensagem = findViewById<TextView>(
+            R.id.tvStatusSincronizacao
+        )
+
+        val botao = findViewById<Button>(
+            R.id.btnSincronizar
+        )
+
+        lifecycleScope.launch {
+            repeatOnLifecycle(Lifecycle.State.STARTED) {
+                sincronizacaoViewModel.uiState.collect { estado ->
+
+                    when (estado) {
+                        SincronizacaoUiState.Oculta -> {
+                            container.visibility = View.GONE
+                        }
+
+                        SincronizacaoUiState.Aguardando -> {
+                            container.visibility = View.VISIBLE
+                            progress.visibility = View.GONE
+                            mensagem.text = "Pronto para sincronizar com o Google."
+                            botao.visibility = View.VISIBLE
+                            botao.isEnabled = true
+                            botao.text = "Sincronizar"
+                        }
+
+                        SincronizacaoUiState.EmAndamento -> {
+                            container.visibility = View.VISIBLE
+                            progress.visibility = View.VISIBLE
+                            mensagem.text = "Sincronizando dados com o Google..."
+                            botao.isEnabled = false
+                            botao.visibility = View.GONE
+                        }
+
+                        is SincronizacaoUiState.Concluida -> {
+                            container.visibility = View.VISIBLE
+                            progress.visibility = View.GONE
+                            mensagem.text =
+                                "${estado.totalSincronizado} registros sincronizados."
+                            botao.visibility = View.VISIBLE
+                            botao.isEnabled = true
+                            botao.text = "Sincronizar novamente"
+                        }
+
+                        is SincronizacaoUiState.Erro -> {
+                            container.visibility = View.VISIBLE
+                            progress.visibility = View.GONE
+                            mensagem.text =
+                                "Falha na sincronização: ${estado.mensagem}"
+                            botao.visibility = View.VISIBLE
+                            botao.isEnabled = true
+                            botao.text = "Tentar novamente"
+                        }
+
+                        SincronizacaoUiState.AutorizacaoNecessaria -> {
+                            container.visibility = View.VISIBLE
+                            progress.visibility = View.GONE
+                            mensagem.text =
+                                "A autorização do Google precisa ser renovada."
+                            botao.visibility = View.GONE
+                        }
+                    }
+                }
+            }
+        }
+    }
+
 
     // --------------------------------------------------
     // CADASTRO DE CONTAS
