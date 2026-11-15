@@ -33,6 +33,8 @@
         android:layout_height="40dp"
         android:minWidth="0dp"
         android:text="Sincronizar"
-        android:textSize="12sp" />
+        android:textSize="12sp"
+        android:backgroundTint="@color/pf_blue_light"
+        android:textColor="@color/black" />
 
 </LinearLayout>

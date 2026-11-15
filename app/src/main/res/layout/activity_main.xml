@@ -862,23 +862,26 @@
                         android:layout_marginTop="8dp"
                         android:orientation="horizontal">
 
-                        <RadioButton
+                        <com.google.android.material.radiobutton.MaterialRadioButton
                             android:id="@+id/rbReceita"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:checked="true"
-                            android:buttonTint="@color/pf_lime"
+                            app:buttonTint="@color/pf_radio_button_tint"
+                            app:useMaterialThemeColors="false"
                             android:text="Receita"
                             android:textColor="@color/pf_text_primary" />
 
-                        <RadioButton
+                        <com.google.android.material.radiobutton.MaterialRadioButton
                             android:id="@+id/rbDespesa"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:layout_marginStart="20dp"
-                            android:buttonTint="@color/pf_expense"
+                            app:buttonTint="@color/pf_radio_button_tint"
+                            app:useMaterialThemeColors="false"
                             android:text="Despesa"
                             android:textColor="@color/pf_text_primary" />
+
                     </RadioGroup>
 
                     <TextView

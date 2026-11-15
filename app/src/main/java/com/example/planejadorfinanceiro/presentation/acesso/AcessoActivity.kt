@@ -161,6 +161,12 @@ class AcessoActivity : AppCompatActivity() {
             try {
                 conectarGoogleUseCase(accessToken)
 
+                println("TESTE -> INICIANDO SEGUNDA CONEXÃO")
+
+                conectarGoogleUseCase(accessToken)
+
+                println("TESTE -> SEGUNDA CONEXÃO FINALIZADA")
+
                 exibirMensagem(
                     "Google conectado e planilha configurada com sucesso!"
                 )

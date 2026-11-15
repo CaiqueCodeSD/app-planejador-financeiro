@@ -410,6 +410,7 @@ class MainActivity : AppCompatActivity() {
 
         DatePickerDialog(
             this,
+            R.style.PfDatePickerDialog,
             { _, ano, mes, dia ->
                 calendario.set(Calendar.YEAR, ano)
                 calendario.set(Calendar.MONTH, mes)
@@ -985,6 +986,7 @@ class MainActivity : AppCompatActivity() {
 
         DatePickerDialog(
             this,
+            R.style.PfDatePickerDialog,
             { _, ano, mes, dia ->
                 movimentacaoSelecionadaMillis = Calendar.getInstance().apply {
                     set(Calendar.YEAR, ano)

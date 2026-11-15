@@ -19,6 +19,15 @@ class GoogleSheetsConfigRepositoryImpl(
 
     override fun observarSpreadsheetId(): Flow<String?> {
         return dataStore.data.map { preferences ->
+
+            preferences.asMap().forEach { (key, value) ->
+                println("DATASTORE -> ${key.name}: $value")
+            }
+
+            println(
+                "DATASTORE -> ID PLANILHA: ${preferences[SPREADSHEET_ID_KEY]}"
+            )
+
             preferences[SPREADSHEET_ID_KEY]
         }
     }
