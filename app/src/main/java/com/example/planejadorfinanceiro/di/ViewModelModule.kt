@@ -7,6 +7,7 @@ import com.example.planejadorfinanceiro.presentation.movimentacao.MovimentacaoVi
 import org.koin.core.module.dsl.viewModel
 import org.koin.dsl.module
 import com.example.planejadorfinanceiro.presentation.sincronizacao.SincronizacaoViewModel
+import com.example.planejadorfinanceiro.presentation.seguranca.BloqueioPinViewModel
 
 val viewModelModule = module {
     viewModel {
@@ -29,6 +30,13 @@ val viewModelModule = module {
         SincronizacaoViewModel(
             repository = get(),
             modoAcessoRepository = get()
+        )
+    }
+
+    viewModel {
+        BloqueioPinViewModel(
+            validarPinUseCase = get(),
+            gerenciadorBloqueioPin = get()
         )
     }
 
