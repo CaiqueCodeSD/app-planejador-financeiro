@@ -1,41 +1,51 @@
-package com.example.planejadorfinanceiro.presentation.seguranca
+package com.example.planejadorfinanceiro.presentation.bloqueio
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.planejadorfinanceiro.data.security.GerenciadorBloqueioPin
+import com.example.planejadorfinanceiro.domain.repository.PinRepository
 import com.example.planejadorfinanceiro.domain.repository.ResultadoValidacaoPin
-import com.example.planejadorfinanceiro.domain.usecase.pin.ValidarPinUseCase
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 
 class BloqueioPinViewModel(
-    private val validarPinUseCase: ValidarPinUseCase,
-    private val gerenciadorBloqueioPin: GerenciadorBloqueioPin
+    private val pinRepository: PinRepository
 ) : ViewModel() {
 
-    val estadoBloqueio = gerenciadorBloqueioPin.estado
+    private val _estado = MutableStateFlow<EstadoBloqueioPin>(
+        EstadoBloqueioPin.Aguardando
+    )
 
-    private val _resultadoValidacao =
-        MutableStateFlow<ResultadoValidacaoPin?>(null)
-
-    val resultadoValidacao: StateFlow<ResultadoValidacaoPin?> =
-        _resultadoValidacao.asStateFlow()
+    val estado: StateFlow<EstadoBloqueioPin> =
+        _estado.asStateFlow()
 
     fun validarPin(pin: String) {
+        if (pin.length != 4 || !pin.all { it.isDigit() }) return
+
         viewModelScope.launch {
-            val resultado = validarPinUseCase(pin)
+            try {
+                _estado.value = when (
+                    val resultado = pinRepository.validarPin(pin)
+                ) {
+                    ResultadoValidacaoPin.Valido ->
+                        EstadoBloqueioPin.Desbloqueado
 
-            _resultadoValidacao.value = resultado
+                    ResultadoValidacaoPin.Incorreto ->
+                        EstadoBloqueioPin.PinIncorreto
 
-            if (resultado == ResultadoValidacaoPin.Valido) {
-                gerenciadorBloqueioPin.desbloquear()
+                    is ResultadoValidacaoPin.Bloqueado ->
+                        EstadoBloqueioPin.TemporariamenteBloqueado(
+                            resultado.tempoRestanteMillis
+                        )
+                }
+            } catch (erro: Exception) {
+                _estado.value = EstadoBloqueioPin.Erro
             }
         }
     }
 
-    fun limparResultado() {
-        _resultadoValidacao.value = null
+    fun limparEstado() {
+        _estado.value = EstadoBloqueioPin.Aguardando
     }
 }

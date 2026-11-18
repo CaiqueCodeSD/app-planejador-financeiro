@@ -11,6 +11,7 @@
                   <entry key="Duration" value="90" />
                   <entry key="Small_Phone" value="120" />
                   <entry key="Tests" value="360" />
+                  <entry key="samsung SM-A155M" value="120" />
                 </map>
               </option>
             </AndroidTestResultsTableState>
@@ -24,6 +25,20 @@
                   <entry key="Duration" value="90" />
                   <entry key="Small_Phone" value="120" />
                   <entry key="Tests" value="360" />
+                  <entry key="samsung SM-A155M" value="120" />
+                </map>
+              </option>
+            </AndroidTestResultsTableState>
+          </value>
+        </entry>
+        <entry key="1468853563">
+          <value>
+            <AndroidTestResultsTableState>
+              <option name="preferredColumnWidths">
+                <map>
+                  <entry key="Duration" value="90" />
+                  <entry key="Tests" value="360" />
+                  <entry key="samsung SM-A155M" value="120" />
                 </map>
               </option>
             </AndroidTestResultsTableState>
