@@ -9,16 +9,16 @@ import org.koin.android.ext.koin.androidLogger
 import org.koin.core.context.startKoin
 import com.example.planejadorfinanceiro.di.dataStoreModule
 import com.example.planejadorfinanceiro.di.useCaseModule
+import com.example.planejadorfinanceiro.data.security.GerenciadorBloqueioPin
 
 class FinanceiroApplication : Application() {
 
     override fun onCreate() {
         super.onCreate()
 
-        startKoin {
+        val koinApp = startKoin {
             androidLogger()
             androidContext(this@FinanceiroApplication)
-
             modules(
                 databaseModule,
                 dataStoreModule,
@@ -27,5 +27,10 @@ class FinanceiroApplication : Application() {
                 useCaseModule
             )
         }
+
+        koinApp.koin
+            .get<GerenciadorBloqueioPin>()
+            .iniciar()
     }
+
 }

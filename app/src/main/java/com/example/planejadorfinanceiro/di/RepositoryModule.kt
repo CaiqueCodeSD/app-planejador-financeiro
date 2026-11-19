@@ -22,6 +22,14 @@ import org.koin.android.ext.koin.androidContext
 import org.koin.dsl.module
 import com.example.planejadorfinanceiro.data.repository.SincronizacaoRepositoryImpl
 import com.example.planejadorfinanceiro.domain.repository.SincronizacaoRepository
+import com.example.planejadorfinanceiro.data.repository.PinRepositoryImpl
+import com.example.planejadorfinanceiro.data.security.AndroidPinMaterialProtector
+import com.example.planejadorfinanceiro.data.security.PinCriptografia
+import com.example.planejadorfinanceiro.domain.repository.PinRepository
+import com.example.planejadorfinanceiro.data.security.GerenciadorBloqueioPin
+import com.example.planejadorfinanceiro.data.security.PinMaterialProtector
+import com.example.planejadorfinanceiro.data.security.PinClock
+import com.example.planejadorfinanceiro.data.security.AndroidPinClock
 
 val repositoryModule = module {
 
@@ -76,6 +84,33 @@ val repositoryModule = module {
             exclusaoPendenteRepository = get(),
             sincronizacaoDataSource = get()
         )
+    }
+
+    single {
+        PinCriptografia()
+    }
+
+    single<PinRepository> {
+        PinRepositoryImpl(
+            dataStore = get(),
+            criptografia = get(),
+            materialProtector = get(),
+            pinClock = get()
+        )
+    }
+
+    single<PinMaterialProtector> {
+        AndroidPinMaterialProtector()
+    }
+
+    single {
+        GerenciadorBloqueioPin(
+            pinRepository = get()
+        )
+    }
+
+    single<PinClock> {
+        AndroidPinClock(androidContext())
     }
 
 }

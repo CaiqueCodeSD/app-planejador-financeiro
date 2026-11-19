@@ -23,8 +23,15 @@ import kotlinx.coroutines.launch
 import org.koin.android.ext.android.inject
 import org.koin.androidx.viewmodel.ext.android.viewModel
 import com.example.planejadorfinanceiro.domain.usecase.ConectarGoogleUseCase
+import com.example.planejadorfinanceiro.domain.repository.PinRepository
+import com.example.planejadorfinanceiro.presentation.seguranca.CadastroPinActivity
+import kotlinx.coroutines.flow.first
 
 class AcessoActivity : AppCompatActivity() {
+
+    private val pinRepository: PinRepository by inject()
+
+    private var fluxoCadastroIniciado = false
 
     private val conectarGoogleUseCase: ConectarGoogleUseCase by inject()
 
@@ -56,6 +63,13 @@ class AcessoActivity : AppCompatActivity() {
             } else {
                 exibirMensagem("Autorização Google cancelada.")
             }
+        }
+
+    private val cadastroPinLauncher =
+        registerForActivityResult(
+            ActivityResultContracts.StartActivityForResult()
+        ) {
+            abrirAplicativo()
         }
 
     private val modoConexao: Boolean
@@ -163,8 +177,6 @@ class AcessoActivity : AppCompatActivity() {
 
                 println("TESTE -> INICIANDO SEGUNDA CONEXÃO")
 
-                conectarGoogleUseCase(accessToken)
-
                 println("TESTE -> SEGUNDA CONEXÃO FINALIZADA")
 
                 exibirMensagem(
@@ -196,7 +208,7 @@ class AcessoActivity : AppCompatActivity() {
                         ModoAcesso.VISITANTE,
                         ModoAcesso.CONECTADO_GOOGLE -> {
                             if (!modoConexao) {
-                                abrirAplicativo()
+                                iniciarFluxoCadastroPin()
                             }
                         }
                     }
@@ -224,4 +236,36 @@ class AcessoActivity : AppCompatActivity() {
             Toast.LENGTH_LONG
         ).show()
     }
+
+    private fun iniciarFluxoCadastroPin() {
+        if (navegacaoRealizada || fluxoCadastroIniciado) return
+
+        fluxoCadastroIniciado = true
+
+        lifecycleScope.launch {
+            try {
+                val pinAtivado = pinRepository
+                    .observarPinAtivado()
+                    .first()
+
+                if (pinAtivado) {
+                    abrirAplicativo()
+                } else {
+                    cadastroPinLauncher.launch(
+                        Intent(
+                            this@AcessoActivity,
+                            CadastroPinActivity::class.java
+                        )
+                    )
+                }
+            } catch (erro: Exception) {
+                fluxoCadastroIniciado = false
+
+                exibirMensagem(
+                    "Não foi possível verificar a configuração do PIN."
+                )
+            }
+        }
+    }
+
 }

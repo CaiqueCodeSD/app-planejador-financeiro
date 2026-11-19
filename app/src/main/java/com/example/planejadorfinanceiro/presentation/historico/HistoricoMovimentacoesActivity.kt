@@ -1,6 +1,5 @@
-package com.example.planejadorfinanceiro.presentation.movimentacao
+package com.example.planejadorfinanceiro.presentation.historico
 
-import android.app.Activity
 import android.content.Intent
 import android.os.Bundle
 import android.view.View
@@ -14,10 +13,13 @@ import androidx.lifecycle.repeatOnLifecycle
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.example.planejadorfinanceiro.R
+import com.example.planejadorfinanceiro.presentation.movimentacao.MovimentacaoAdapter
+import com.example.planejadorfinanceiro.presentation.movimentacao.MovimentacaoViewModel
+import com.example.planejadorfinanceiro.presentation.seguranca.ActivityProtegida
 import kotlinx.coroutines.launch
 import org.koin.androidx.viewmodel.ext.android.viewModel
 
-class HistoricoMovimentacoesActivity : AppCompatActivity() {
+class HistoricoMovimentacoesActivity : ActivityProtegida() {
 
     private val movimentacaoViewModel: MovimentacaoViewModel by viewModel()
 
