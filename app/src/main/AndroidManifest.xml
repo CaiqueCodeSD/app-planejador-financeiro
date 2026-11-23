@@ -17,13 +17,15 @@
         <activity
             android:name=".presentation.acesso.AcessoActivity"
             android:exported="true">
-
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
-
         </activity>
+
+        <activity
+            android:name=".presentation.bloqueio.BloqueioPinActivity"
+            android:exported="false" />
 
         <activity
             android:name=".MainActivity"
@@ -31,8 +33,13 @@
             android:windowSoftInputMode="adjustResize" />
 
         <activity
-            android:name=".presentation.movimentacao.HistoricoMovimentacoesActivity"
+            android:name=".presentation.historico.HistoricoMovimentacoesActivity"
             android:exported="false" />
+
+        <activity
+            android:name=".presentation.seguranca.CadastroPinActivity"
+            android:exported="false" />
+
     </application>
 
 </manifest>

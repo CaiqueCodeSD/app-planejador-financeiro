@@ -19,7 +19,6 @@ import androidx.activity.OnBackPressedCallback
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AlertDialog
-import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.lifecycle.Lifecycle
@@ -31,7 +30,7 @@ import com.example.planejadorfinanceiro.domain.model.SituacaoConta
 import com.example.planejadorfinanceiro.domain.model.TipoMovimentacao
 import com.example.planejadorfinanceiro.presentation.conta.ContaViewModel
 import com.example.planejadorfinanceiro.presentation.dashboard.DashboardViewModel
-import com.example.planejadorfinanceiro.presentation.movimentacao.HistoricoMovimentacoesActivity
+import com.example.planejadorfinanceiro.presentation.historico.HistoricoMovimentacoesActivity
 import com.example.planejadorfinanceiro.presentation.movimentacao.MovimentacaoViewModel
 import com.example.planejadorfinanceiro.presentation.sincronizacao.SincronizacaoUiState
 import com.example.planejadorfinanceiro.presentation.sincronizacao.SincronizacaoViewModel
@@ -46,8 +45,9 @@ import java.util.Locale
 import com.example.planejadorfinanceiro.presentation.acesso.ModoAcessoViewModel
 import com.example.planejadorfinanceiro.domain.model.ModoAcesso
 import com.example.planejadorfinanceiro.presentation.acesso.AcessoActivity
+import com.example.planejadorfinanceiro.presentation.seguranca.ActivityProtegida
 
-class MainActivity : AppCompatActivity() {
+class MainActivity : ActivityProtegida() {
 
     private val sincronizacaoViewModel: SincronizacaoViewModel by viewModel()
 

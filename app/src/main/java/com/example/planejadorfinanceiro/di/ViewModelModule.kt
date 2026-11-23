@@ -1,12 +1,14 @@
 package com.example.planejadorfinanceiro.di
 
 import com.example.planejadorfinanceiro.presentation.acesso.ModoAcessoViewModel
+import com.example.planejadorfinanceiro.presentation.bloqueio.BloqueioPinViewModel
 import com.example.planejadorfinanceiro.presentation.conta.ContaViewModel
 import com.example.planejadorfinanceiro.presentation.dashboard.DashboardViewModel
 import com.example.planejadorfinanceiro.presentation.movimentacao.MovimentacaoViewModel
+import com.example.planejadorfinanceiro.presentation.seguranca.CadastroPinViewModel
+import com.example.planejadorfinanceiro.presentation.sincronizacao.SincronizacaoViewModel
 import org.koin.core.module.dsl.viewModel
 import org.koin.dsl.module
-import com.example.planejadorfinanceiro.presentation.sincronizacao.SincronizacaoViewModel
 
 val viewModelModule = module {
     viewModel {
@@ -29,6 +31,18 @@ val viewModelModule = module {
         SincronizacaoViewModel(
             repository = get(),
             modoAcessoRepository = get()
+        )
+    }
+
+    viewModel {
+        BloqueioPinViewModel(
+            pinRepository = get()
+        )
+    }
+
+    viewModel {
+        CadastroPinViewModel(
+            pinRepository = get()
         )
     }
 
